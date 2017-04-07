@@ -69,6 +69,7 @@ found:
   p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
+  p->start_ticks = ticks;
 
   return p;
 }
@@ -493,6 +494,12 @@ static char *states[] = {
   [ZOMBIE]    "zombie"
 };
 
+void
+printheader(void){
+
+  cprintf("PID  State Name Elapsed PCs");
+
+}
 //PAGEBREAK: 36
 // Print a process listing to console.  For debugging.
 // Runs when user types ^P on console.
@@ -504,7 +511,8 @@ procdump(void)
   struct proc *p;
   char *state;
   uint pc[10];
-  
+
+  printheader();  
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->state == UNUSED)
       continue;
@@ -521,3 +529,4 @@ procdump(void)
     cprintf("\n");
   }
 }
+
