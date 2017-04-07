@@ -79,3 +79,4 @@ bootmain.c
 
 # add student files here. Change this comment to be the section header in xv6.pdf
 print_mode.c
+date.c
