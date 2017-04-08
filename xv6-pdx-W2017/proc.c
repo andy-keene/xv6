@@ -495,12 +495,6 @@ static char *states[] = {
   [ZOMBIE]    "zombie"
 };
 
-//print header, and prepend newline for consistent output
-void
-printheader(void){
-  cprintf("\nPID    State    Name    Elapsed    PCs\n");
-}
-
 //prints buff_size number of whitespaces
 void
 printbuff(const int buff_size){
@@ -522,7 +516,7 @@ procdump(void)
   char *state;
   uint pc[10];
   uint curr_ticks = ticks;
-  printheader();  
+  cprintf("\nPID    State    Name    Elapsed    PCs\n");
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->state == UNUSED)
       continue;
