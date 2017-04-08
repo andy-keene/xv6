@@ -69,7 +69,6 @@ found:
   p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
-  p->start_ticks = ticks;
 
   return p;
 }
@@ -100,6 +99,7 @@ userinit(void)
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
 
+  p->start_ticks = ticks;
   p->state = RUNNABLE;
 }
 
@@ -158,6 +158,7 @@ fork(void)
   safestrcpy(np->name, proc->name, sizeof(proc->name));
  
   pid = np->pid;
+  np->start_ticks = ticks;
 
   // lock to force the compiler to emit the np->state write last.
   acquire(&ptable.lock);
@@ -511,6 +512,8 @@ printbuff(const int buff_size){
 // Print a process listing to console.  For debugging.
 // Runs when user types ^P on console.
 // No lock to avoid wedging a stuck machine further.
+// Note: we must grab start_time at the beginning of the function
+//       for consistency between diff. process dumps 
 void
 procdump(void)
 {
@@ -518,7 +521,7 @@ procdump(void)
   struct proc *p;
   char *state;
   uint pc[10];
-
+  uint start_ticks = ticks;
   printheader();  
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->state == UNUSED)
@@ -528,7 +531,8 @@ procdump(void)
     else
       state = "???";
  
-    float time = ((float)(ticks - p->start_ticks))/100.00;
+    float run_time = ((float)(start_ticks - p->start_ticks))/100.00;
+//    float run_time = ((float)start_ticks - (float)p->start_ticks)/100.00;
     //print components, and necessary buffers
     cprintf("  %d", p->pid);
     printbuff(p->pid > 10 ? 5 : 6);
@@ -537,7 +541,7 @@ procdump(void)
     cprintf("%s", p->name);
     printbuff(8 - strlen(p->name));
     //not worth overhead to *accurately* buffer time    
-    cprintf("%d.%d%d", (int)time, (int)(time * 10) % 10, (int)(time*100)%10);
+    cprintf("%d.%d%d", (int)run_time, (int)(run_time * 10) % 10, (int)(run_time*100)%10);
     printbuff(6);
 //    cprintbuff(time > 100.0, 6, 5);
     if(p->state == SLEEPING){
