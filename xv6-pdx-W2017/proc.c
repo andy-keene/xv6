@@ -494,12 +494,21 @@ static char *states[] = {
   [ZOMBIE]    "zombie"
 };
 
+//print header, and prepend newline for consistent output
 void
 printheader(void){
 
-  cprintf("PID  State Name Elapsed PCs");
+  cprintf("\nPID    State    Name    Elapsed    PCs\n");
 
 }
+
+//buffer printer
+void
+printbuff(const int buff_size){
+  for(int i = 0; i < buff_size; i++)
+    cprintf(" ");
+}
+
 //PAGEBREAK: 36
 // Print a process listing to console.  For debugging.
 // Runs when user types ^P on console.
@@ -520,7 +529,19 @@ procdump(void)
       state = states[p->state];
     else
       state = "???";
-    cprintf("%d %s %s", p->pid, state, p->name);
+ 
+    float time = ((float)(ticks - p->start_ticks))/100.00;
+    //print component, and necessary buffer
+    cprintf("  %d", p->pid);
+    printbuff(p->pid > 10 ? 5 : 6);
+    cprintf("%s", state);
+    printbuff(9 - strlen(state));
+    cprintf("%s", p->name);
+    printbuff(8 - strlen(p->name));
+    //not worth overhead to *accurately* buffer time    
+    cprintf("%d.%d%d", (int)time, (int)(time * 10) % 10, (int)(time*100)%10);
+    printbuff(6);
+//    cprintbuff(time > 100.0, 6, 5);
     if(p->state == SLEEPING){
       getcallerpcs((uint*)p->context->ebp+2, pc);
       for(i=0; i<10 && pc[i] != 0; i++)
