@@ -96,15 +96,11 @@ int sys_halt(void){
 //return date
 int
 sys_date(void){
-//do stuff
-
   struct rtcdate *d;
-  //ask Enis why we give the size of the struct (d's deref)
-  //instead of the size of the ptr...
+  //see argptr def in syscall.c for reminder
   if(argptr(0, (void*)&d, sizeof(*d)) < 0)
     return -1;
   //pass struct ptr to cmosttime
   cmostime(d);
-  //success
   return 0; 
 }
