@@ -524,7 +524,6 @@ procdump(void)
       state = states[p->state];
     else
       state = "???";
-    uint elapsed_time = curr_ticks - p->start_ticks;
     //print components, and necessary buffers
     cprintf("%d", p->pid);
     printbuff(p->pid > 10 ? 5 : 6);
@@ -532,10 +531,14 @@ procdump(void)
     printbuff(9 - strlen(state));
     cprintf("%s", p->name);
     printbuff(8 - strlen(p->name));
-    //not worth overhead to *accurately* buffer time    
-    cprintf("%d.%d", elapsed_time / 100, elapsed_time % 100);
+    //calculate time with leading zeros
+    uint elapsed_time = curr_ticks - p->start_ticks;
+    uint hund_secs = elapsed_time % 100;
+    if (hund_secs > 9)
+      cprintf("%d.%d", elapsed_time / 100, hund_secs);
+    else 
+      cprintf("%d.%d%d", elapsed_time / 100, 0, hund_secs);
     printbuff(6);
-//    cprintbuff(time > 100.0, 6, 5);
     if(p->state == SLEEPING){
       getcallerpcs((uint*)p->context->ebp+2, pc);
       for(i=0; i<10 && pc[i] != 0; i++)
