@@ -521,7 +521,7 @@ procdump(void)
   struct proc *p;
   char *state;
   uint pc[10];
-  uint start_ticks = ticks;
+  uint curr_ticks = ticks;
   printheader();  
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->state == UNUSED)
@@ -530,18 +530,16 @@ procdump(void)
       state = states[p->state];
     else
       state = "???";
- 
-    float run_time = ((float)(start_ticks - p->start_ticks))/100.00;
-//    float run_time = ((float)start_ticks - (float)p->start_ticks)/100.00;
+    uint elapsed_time = curr_ticks - p->start_ticks;
     //print components, and necessary buffers
-    cprintf("  %d", p->pid);
+    cprintf("%d", p->pid);
     printbuff(p->pid > 10 ? 5 : 6);
     cprintf("%s", state);
     printbuff(9 - strlen(state));
     cprintf("%s", p->name);
     printbuff(8 - strlen(p->name));
     //not worth overhead to *accurately* buffer time    
-    cprintf("%d.%d%d", (int)run_time, (int)(run_time * 10) % 10, (int)(run_time*100)%10);
+    cprintf("%d.%d", elapsed_time / 100, elapsed_time % 100);
     printbuff(6);
 //    cprintbuff(time > 100.0, 6, 5);
     if(p->state == SLEEPING){
