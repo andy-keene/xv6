@@ -497,12 +497,10 @@ static char *states[] = {
 //print header, and prepend newline for consistent output
 void
 printheader(void){
-
   cprintf("\nPID    State    Name    Elapsed    PCs\n");
-
 }
 
-//buffer printer
+//prints buff_size number of whitespaces
 void
 printbuff(const int buff_size){
   for(int i = 0; i < buff_size; i++)
@@ -531,7 +529,7 @@ procdump(void)
       state = "???";
  
     float time = ((float)(ticks - p->start_ticks))/100.00;
-    //print component, and necessary buffer
+    //print components, and necessary buffers
     cprintf("  %d", p->pid);
     printbuff(p->pid > 10 ? 5 : 6);
     cprintf("%s", state);
