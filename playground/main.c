@@ -1,4 +1,5 @@
-//a playground for c programs
+#include <time.h> //a playground for c programs
+#include <unistd.h>
 #define ONE    1
 #define TWO    ONE+1
 #define THREE  TWO+1
@@ -18,17 +19,30 @@ static char * systemcalls[]= {
 int
 main()
 {
+   int * int_ptr;
+   *int_ptr = 1;
+   
+   int * p;
+   *p = 1;
 
-    int a[] = {1,2,3};
-    char * sys[] = {
-[ONE] = "!", 
-[TWO] = "1",
-[THREE] = "three"};
+   double * dbl_ptr;
+   *dbl_ptr = 2.0;
 
-     printf("%d", ONE);
-     for(int i = ONE; i < FOUR+1; i++){
-          printf("call, %s, is %d",sys[i],i);
-    }
+   int int_num = 1;
+   float float_num = 2.0;
+   char character = 'a';
 
+   void * void_ptr; 
+   void_ptr  = &int_num;
+   void_ptr  = &float_num;
+   void_ptr  = &character;
+/*   
+   int * int_ptr;
+   int_ptr = &int_num;
+   int_ptr = &float_num;
+   int_ptr = &character;
+*/
+  
+//  printf("p: %x, &p: %x, (void*)&p: %x \n", p, &p, (void*)&p);
 
 }
