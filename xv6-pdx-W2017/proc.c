@@ -99,6 +99,7 @@ userinit(void)
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
 
+  p->start_ticks = ticks;
   p->state = RUNNABLE;
 }
 
@@ -157,6 +158,7 @@ fork(void)
   safestrcpy(np->name, proc->name, sizeof(proc->name));
  
   pid = np->pid;
+  np->start_ticks = ticks;
 
   // lock to force the compiler to emit the np->state write last.
   acquire(&ptable.lock);
@@ -493,10 +495,19 @@ static char *states[] = {
   [ZOMBIE]    "zombie"
 };
 
+//prints buff_size number of whitespaces
+void
+printbuff(const int buff_size){
+  for(int i = 0; i < buff_size; i++)
+    cprintf(" ");
+}
+
 //PAGEBREAK: 36
 // Print a process listing to console.  For debugging.
 // Runs when user types ^P on console.
 // No lock to avoid wedging a stuck machine further.
+// Note: we must grab start_time at the beginning of the function
+//       for consistency between diff. process dumps 
 void
 procdump(void)
 {
@@ -504,7 +515,8 @@ procdump(void)
   struct proc *p;
   char *state;
   uint pc[10];
-  
+  uint curr_ticks = ticks;
+  cprintf("\nPID    State    Name    Elapsed    PCs\n");
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->state == UNUSED)
       continue;
@@ -512,7 +524,21 @@ procdump(void)
       state = states[p->state];
     else
       state = "???";
-    cprintf("%d %s %s", p->pid, state, p->name);
+    //print components, and necessary buffers
+    cprintf("%d", p->pid);
+    printbuff(p->pid > 10 ? 5 : 6);
+    cprintf("%s", state);
+    printbuff(9 - strlen(state));
+    cprintf("%s", p->name);
+    printbuff(8 - strlen(p->name));
+    //calculate time with leading zeros
+    uint elapsed_time = curr_ticks - p->start_ticks;
+    uint hund_secs = elapsed_time % 100;
+    if (hund_secs > 9)
+      cprintf("%d.%d", elapsed_time / 100, hund_secs);
+    else 
+      cprintf("%d.%d%d", elapsed_time / 100, 0, hund_secs);
+    printbuff(6);
     if(p->state == SLEEPING){
       getcallerpcs((uint*)p->context->ebp+2, pc);
       for(i=0; i<10 && pc[i] != 0; i++)
@@ -521,3 +547,4 @@ procdump(void)
     cprintf("\n");
   }
 }
+

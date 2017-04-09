@@ -93,3 +93,14 @@ int sys_halt(void){
   return 0;
 }
 
+//return date
+int
+sys_date(void){
+  struct rtcdate *d;
+  //see argptr def in syscall.c for reminder
+  if(argptr(0, (void*)&d, sizeof(*d)) < 0)
+    return -1;
+  //pass struct ptr to cmosttime
+  cmostime(d);
+  return 0; 
+}
