@@ -58,6 +58,8 @@ struct proc {
   char *kstack;                // Bottom of kernel stack for this process
   enum procstate state;        // Process state
   uint pid;                    // Process ID
+  uint uid;                    // Process user ID (UID)
+  uint gid;                    // Process group ID (GID)
   struct proc *parent;         // Parent process
   struct trapframe *tf;        // Trap frame for current syscall
   struct context *context;     // swtch() here to run process

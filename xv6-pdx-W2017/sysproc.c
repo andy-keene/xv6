@@ -104,3 +104,27 @@ sys_date(void){
   cmostime(d);
   return 0; 
 }
+
+int
+sys_getuid(void){
+  return 0;
+}
+
+int
+sys_getgid(void){
+  return 0;
+}
+int
+sys_getppid(void){
+  return 0;
+}
+
+int
+sys_setuid(void){
+  return 0;
+}
+
+int
+sys_setgid(void){
+  return 0;
+}

@@ -24,7 +24,15 @@ char* sbrk(int);
 int sleep(int);
 int uptime(void);
 int halt(void);
+// Added system calls
+//Project 1
 int date(struct rtcdate*);
+//Project 2
+uint getuid(void);
+uint getgid(void);
+uint getppid(void);
+int setuid(uint);
+int setgid(uint);
 
 // ulib.c
 int stat(char*, struct stat*);
