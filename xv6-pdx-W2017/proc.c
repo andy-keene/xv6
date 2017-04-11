@@ -497,7 +497,8 @@ static char *states[] = {
 
 //prints buff_size number of whitespaces
 void
-printbuff(const int buff_size){
+printbuff(const int buff_size)
+{
   for(int i = 0; i < buff_size; i++)
     cprintf(" ");
 }
