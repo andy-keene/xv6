@@ -99,6 +99,8 @@ userinit(void)
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
 
+  p->uid = INITUID; // 1-st process UID/GID in param.h
+  p->gid = INITGID;
   p->start_ticks = ticks;
   p->state = RUNNABLE;
 }
@@ -158,6 +160,8 @@ fork(void)
   safestrcpy(np->name, proc->name, sizeof(proc->name));
  
   pid = np->pid;
+  np->uid = proc->uid;
+  np->gid = proc->gid;
   np->start_ticks = ticks;
 
   // lock to force the compiler to emit the np->state write last.

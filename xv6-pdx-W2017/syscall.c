@@ -138,11 +138,6 @@ static int (*syscalls[])(void) = {
 [SYS_setgid]  sys_setgid,
 };
 
-uint getuid(void);
-uint getgid(void);
-uint getppid(void);
-int setuid(uint);
-int setgid(uint);
 // put data structure for printing out system call invocation information here
 #ifdef PRINT_SYSCALLS
 const char * syscallnames[] = {
@@ -185,8 +180,7 @@ syscall(void)
   num = proc->tf->eax;
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
     proc->tf->eax = syscalls[num]();
-// some code goes here
-
+    // some code goes here
     #ifdef PRINT_SYSCALLS
     cprintf("%s -> %d\n", syscallnames[num], proc->tf->eax);
     #endif

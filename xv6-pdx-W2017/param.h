@@ -12,4 +12,5 @@
 #define NBUF         (MAXOPBLOCKS*3)  // size of disk block cache
 // #define FSSIZE       1000  // size of file system in blocks
 #define FSSIZE       2000  // size of file system in blocks  // CS333 requires a larger FS.
-
+#define INITUID      0   // UID of 1st process 
+#define INITGID      0   // GID of 1st process

@@ -95,7 +95,8 @@ int sys_halt(void){
 
 //return date
 int
-sys_date(void){
+sys_date(void)
+{
   struct rtcdate *d;
   //see argptr def in syscall.c for reminder
   if(argptr(0, (void*)&d, sizeof(*d)) < 0)
@@ -106,25 +107,55 @@ sys_date(void){
 }
 
 int
-sys_getuid(void){
+sys_getuid(void)
+{
+  return proc->uid;
+//  return 0;
+}
+
+int
+sys_getgid(void)
+{
+  return proc->gid;
+//  return 0;
+}
+int
+sys_getppid(void)
+{
+//  for root we can link parent to itself?
+//  return proc->parent->pid;
   return 0;
 }
 
 int
-sys_getgid(void){
-  return 0;
-}
-int
-sys_getppid(void){
+sys_setuid(void)
+{
+  int stack_arg;
+  uint uid;
+
+  if(argint(0, &stack_arg) < 0)
+    return -1;
+  //cast to uint.. dangerous?
+  uid = (uint)stack_arg;
+  //check if we can be sure what we are given *is* an unsigned int
+  if(uid < 0 || uid > 32767)
+    return -1;  //out of bounds
+  proc->uid = uid;
   return 0;
 }
 
 int
-sys_setuid(void){
-  return 0;
-}
+sys_setgid(void)
+{
+  int stack_arg;
+  uint gid;
 
-int
-sys_setgid(void){
+  if(argint(0, &stack_arg) < 0)
+    return -1;
+  //cast to uint_dangerous?
+  gid = (uint)stack_arg;
+  if(gid < 0 || gid > 32767)
+    return -1;
+  proc->gid = gid; 
   return 0;
 }
