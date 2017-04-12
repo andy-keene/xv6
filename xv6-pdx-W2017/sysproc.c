@@ -110,21 +110,25 @@ int
 sys_getuid(void)
 {
   return proc->uid;
-//  return 0;
 }
 
 int
 sys_getgid(void)
 {
   return proc->gid;
-//  return 0;
 }
+
 int
 sys_getppid(void)
 {
-//  for root we can link parent to itself?
-//  return proc->parent->pid;
-  return 0;
+  //if proc is initproc, return proc->pid
+  int pid;
+
+  if(proc->parent)
+    pid = proc->parent->pid;
+  else
+    pid = proc->pid;
+  return pid;
 }
 
 int
@@ -135,9 +139,7 @@ sys_setuid(void)
 
   if(argint(0, &stack_arg) < 0)
     return -1;
-  //cast to uint.. dangerous?
   uid = (uint)stack_arg;
-  //check if we can be sure what we are given *is* an unsigned int
   if(uid < 0 || uid > 32767)
     return -1;  //out of bounds
   proc->uid = uid;
@@ -152,7 +154,6 @@ sys_setgid(void)
 
   if(argint(0, &stack_arg) < 0)
     return -1;
-  //cast to uint_dangerous?
   gid = (uint)stack_arg;
   if(gid < 0 || gid > 32767)
     return -1;
