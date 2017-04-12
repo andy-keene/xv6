@@ -6,6 +6,7 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "proc.h"
+#include "uproc.h"
 
 int
 sys_fork(void)
@@ -121,10 +122,9 @@ sys_getgid(void)
 int
 sys_getppid(void)
 {
-  //if proc is initproc, return proc->pid
   int pid;
 
-  if(proc->parent)
+  if(proc->parent) //check if proc is initproc
     pid = proc->parent->pid;
   else
     pid = proc->pid;
@@ -158,5 +158,20 @@ sys_setgid(void)
   if(gid < 0 || gid > 32767)
     return -1;
   proc->gid = gid; 
+  return 0;
+}
+
+int
+sys_getprocs(void)
+{
+  int stack_arg;
+  struct uproc * table;
+ 
+  if(argint(0, &stack_arg) < 0)
+    return -1; //failure to retrieve arguments
+  if(argptr(1, (void*)&table, sizeof(*table)) < 0)
+    return -1;
+  cprintf("Testing get_procs... max: %d, proctable[0].size: %d \n", stack_arg, table[0].size);
+
   return 0;
 }

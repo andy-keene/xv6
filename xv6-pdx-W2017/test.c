@@ -1,5 +1,6 @@
 #include "types.h"
 #include "user.h"
+#include "uproc.h"
 
 const uint TPS = 35;
 
@@ -57,6 +58,19 @@ fork_test(uint guid, uint child_guid)
 }
 
 int
+testproctable(void)
+{
+  printf(1, "calling getprocs...\n");
+
+  uint max = 1;
+  struct uproc * table = (struct uproc *) malloc(sizeof(struct uproc) * 1);
+  table[0].size = 51;
+  int ret = getprocs(max, table);
+
+  return ret;
+}
+
+int
 main(int argc, char*argv[])
 {
   int length = 5;
@@ -64,6 +78,13 @@ main(int argc, char*argv[])
   uint guid2 = 67;
   uint success_nums[] = {0, 100, 12, 2929, 32767};
   uint fail_nums[] = {32768, 40000, 102000, 500000, -1}; //note -1 really means 0xFFF... (max uint)
+
+//  testproctable();
+/*  testing cpu_time
+  while(1 ==1){
+   ;
+  }
+*/
 
   printf(1, "**Successfull tests**\n");
   for(int i = 0; i < length; i++){

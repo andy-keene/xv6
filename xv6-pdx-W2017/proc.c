@@ -553,7 +553,7 @@ procdump(void)
     else 
       cprintf("%d.%d%d", elapsed_time / 100, 0, hund_secs);
     printbuff(6);
-    cprintf("  running time: %d", p->cpu_ticks_total % 100); 
+    cprintf("  running time: %d.%d", p->cpu_ticks_total / 100, p->cpu_ticks_total % 100); 
     if(p->state == SLEEPING){
       getcallerpcs((uint*)p->context->ebp+2, pc);
       for(i=0; i<10 && pc[i] != 0; i++)
