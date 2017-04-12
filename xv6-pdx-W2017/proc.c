@@ -65,6 +65,10 @@ found:
   sp -= 4;
   *(uint*)sp = (uint)trapret;
 
+  //initialize running time counts
+  p->cpu_ticks_total = 0;
+  p->cpu_ticks_in = 0;
+
   sp -= sizeof *p->context;
   p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context);
@@ -310,6 +314,8 @@ scheduler(void)
       proc = p;
       switchuvm(p);
       p->state = RUNNING;
+      //before or after running?
+      p->cpu_ticks_in = ticks;
       swtch(&cpu->scheduler, proc->context);
       switchkvm();
 
@@ -351,7 +357,10 @@ sched(void)
   if(readeflags()&FL_IF)
     panic("sched interruptible");
   intena = cpu->intena;
+  //Which order should this go in/ after the switch or before? 
+  proc->cpu_ticks_total += ticks - proc->cpu_ticks_in;
   swtch(&proc->context, cpu->scheduler);
+  
   cpu->intena = intena;
 }
 #else
@@ -544,6 +553,7 @@ procdump(void)
     else 
       cprintf("%d.%d%d", elapsed_time / 100, 0, hund_secs);
     printbuff(6);
+    cprintf("  running time: %d", p->cpu_ticks_total % 100); 
     if(p->state == SLEEPING){
       getcallerpcs((uint*)p->context->ebp+2, pc);
       for(i=0; i<10 && pc[i] != 0; i++)

@@ -69,6 +69,8 @@ struct proc {
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
   uint start_ticks;            // Time of creation
+  uint cpu_ticks_total;        // Total running time of proc in ticks
+  uint cpu_ticks_in;           // Tick count when last scheduled
 };
 
 // Process memory is laid out contiguously, low addresses first:
