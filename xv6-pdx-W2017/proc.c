@@ -6,6 +6,7 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#include "uproc.h"
 
 struct {
   struct spinlock lock;
@@ -508,12 +509,15 @@ static char *states[] = {
   [ZOMBIE]    "zombie"
 };
 
-//prints buff_size number of whitespaces
+//prints a number with leading zero in hundreths place
 void
-printbuff(const int buff_size)
+printnum(const uint num)
 {
-  for(int i = 0; i < buff_size; i++)
-    cprintf(" ");
+  if(num % 100 > 9)
+    cprintf("%d.%d\t", num / 100, num % 100);
+  else
+    cprintf("%d.%d%d\t", num / 100, 0, num % 100);
+
 }
 
 //PAGEBREAK: 36
@@ -530,7 +534,7 @@ procdump(void)
   char *state;
   uint pc[10];
   uint curr_ticks = ticks;
-  cprintf("\nPID    State    Name    Elapsed    PCs\n");
+  cprintf("\nPID\tName\tUID\tGID\tPPID\tELapsed\tCPU\tState\tSize\tPCs\n");
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->state == UNUSED)
       continue;
@@ -538,22 +542,10 @@ procdump(void)
       state = states[p->state];
     else
       state = "???";
-    //print components, and necessary buffers
-    cprintf("%d", p->pid);
-    printbuff(p->pid > 10 ? 5 : 6);
-    cprintf("%s", state);
-    printbuff(9 - strlen(state));
-    cprintf("%s", p->name);
-    printbuff(8 - strlen(p->name));
-    //calculate time with leading zeros
-    uint elapsed_time = curr_ticks - p->start_ticks;
-    uint hund_secs = elapsed_time % 100;
-    if (hund_secs > 9)
-      cprintf("%d.%d", elapsed_time / 100, hund_secs);
-    else 
-      cprintf("%d.%d%d", elapsed_time / 100, 0, hund_secs);
-    printbuff(6);
-    cprintf("  running time: %d.%d", p->cpu_ticks_total / 100, p->cpu_ticks_total % 100); 
+    cprintf("%d\t%s\t%d\t%d\t%d\t", p->pid, p->name, p->uid, p->gid, (p->parent ? p->parent->pid : p->pid) );
+    printnum(curr_ticks - p->start_ticks); 
+    printnum(p->cpu_ticks_total);
+    cprintf("%s\t%d\t", state, p->sz);
     if(p->state == SLEEPING){
       getcallerpcs((uint*)p->context->ebp+2, pc);
       for(i=0; i<10 && pc[i] != 0; i++)
@@ -561,5 +553,40 @@ procdump(void)
     }
     cprintf("\n");
   }
+}
+
+int
+getprocs(uint max, struct uproc *table)
+{
+  struct proc *p;
+  char *state;
+  uint i = 0;
+
+  acquire(&ptable.lock);
+  for(p = ptable.proc; p < &ptable.proc[NPROC] && i < max; p++){
+    if(p->state == UNUSED)
+      continue;  //skip unused processes
+    if(p->state >= 0 && p->state < NELEM(states) && states[p->state])
+      state = states[p->state];
+    else
+      state = "???";
+    //unsure if this copy is correct... 
+    // also both p->name and state < STRMAX
+    strncpy(table[i].state, state, STRMAX);
+    strncpy(table[i].name, p->name, STRMAX);
+    table[i].pid = p->pid; 
+    table[i].uid = p->uid;
+    table[i].gid = p->gid;
+    table[i].ppid = (p->parent ? p->parent->pid : p->pid);
+    //is it fine to calculate the elapsed time in-line?
+    table[i].elapsed_ticks = ticks - p->start_ticks;
+    table[i].cpu_total_ticks = p->cpu_ticks_total;
+    table[i].size = p->sz;
+    i++;
+  }
+  release(&ptable.lock);
+
+  //return number of elements filled
+  return  i;
 }
 

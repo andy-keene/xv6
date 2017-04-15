@@ -122,13 +122,8 @@ sys_getgid(void)
 int
 sys_getppid(void)
 {
-  int pid;
-
-  if(proc->parent) //check if proc is initproc
-    pid = proc->parent->pid;
-  else
-    pid = proc->pid;
-  return pid;
+  //init proc has no parent
+  return proc->parent ? proc->parent->pid : proc->pid;
 }
 
 int
@@ -165,13 +160,13 @@ int
 sys_getprocs(void)
 {
   int stack_arg;
-  struct uproc * table;
+  struct uproc *table;
  
+  //return failure to retrieve arguments
   if(argint(0, &stack_arg) < 0)
-    return -1; //failure to retrieve arguments
+    return -1; 
   if(argptr(1, (void*)&table, sizeof(*table)) < 0)
     return -1;
-  cprintf("Testing get_procs... max: %d, proctable[0].size: %d \n", stack_arg, table[0].size);
-
-  return 0;
+  //we're just a wrapper for getprocs() in proc.c
+  return getprocs((uint)stack_arg, table);
 }

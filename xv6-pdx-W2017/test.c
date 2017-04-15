@@ -2,7 +2,7 @@
 #include "user.h"
 #include "uproc.h"
 
-const uint TPS = 35;
+const uint TPS = 100;
 
 static void
 set_gid(uint gid)
@@ -14,7 +14,7 @@ set_gid(uint gid)
     printf(2, "SUCCESS: GID is: %d, Return code: %d \n", new_gid, ret);
   else 
     printf(2, "FAIL: UID is: %d, Return code: %d \n", new_gid, ret);
-  sleep(5 * TPS);
+  sleep(2 * TPS);
 
 }
 
@@ -28,7 +28,7 @@ set_uid(uint uid)
     printf(2, "SUCCESS: UID is: %d, Return code: %d \n", new_uid, ret);
   else 
     printf(2, "FAIL: UID is: %d, Return code: %d \n", new_uid, ret);
-  sleep(5 * TPS);
+  sleep(2 * TPS);
 }
 
 static void
@@ -54,7 +54,7 @@ fork_test(uint guid, uint child_guid)
     printf(2, "(Child After Set) PID: %d, PPID: %d, UID: %d, GID: %d\n", getpid(), getppid(), getuid(), getgid());
   }
   else
-    sleep(5 * TPS);  //wait for child to exit and return
+    sleep(2 * TPS);  //wait for child to exit and return
 }
 
 int
@@ -62,11 +62,28 @@ testproctable(void)
 {
   printf(1, "calling getprocs...\n");
 
-  uint max = 1;
-  struct uproc * table = (struct uproc *) malloc(sizeof(struct uproc) * 1);
-  table[0].size = 51;
+  uint max = 5;
+  struct uproc * table = (struct uproc *) malloc(sizeof(struct uproc) * max);
   int ret = getprocs(max, table);
-
+  if (ret < 0){
+     printf(1, "Uproc failed with %d", ret);
+  } 
+  else {
+    for(uint i = 0; i < ret; i++){
+      printf(2, "%s\t", table[i].name); 
+      printf(2, "%s\t", table[i].state);
+      printf(2, "%d\t", table[i].pid); 
+      printf(2, "%d\t", table[i].uid);
+      printf(2, "%d\t", table[i].gid);
+      printf(2, "%d\t", table[i].ppid);
+      //is it fine to calculate the elapsed time in-line?
+      printf(2, "%d\t", table[i].elapsed_ticks);
+      printf(2, "%d\t", table[i].cpu_total_ticks);
+      printf(2, "%d\t", table[i].size);
+      printf(2, "\n");
+    }
+  }
+  free(table);
   return ret;
 }
 
@@ -79,7 +96,7 @@ main(int argc, char*argv[])
   uint success_nums[] = {0, 100, 12, 2929, 32767};
   uint fail_nums[] = {32768, 40000, 102000, 500000, -1}; //note -1 really means 0xFFF... (max uint)
 
-//  testproctable();
+  testproctable();
 /*  testing cpu_time
   while(1 ==1){
    ;
