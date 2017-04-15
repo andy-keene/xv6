@@ -549,7 +549,7 @@ procdump(void)
     if(p->state == SLEEPING){
       getcallerpcs((uint*)p->context->ebp+2, pc);
       for(i=0; i<10 && pc[i] != 0; i++)
-        cprintf(" %p", pc[i]);
+        cprintf("%p ", pc[i]);
     }
     cprintf("\n");
   }
@@ -587,6 +587,6 @@ getprocs(uint max, struct uproc *table)
   release(&ptable.lock);
 
   //return number of elements filled
-  return  i;
+  return i;
 }
 

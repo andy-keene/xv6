@@ -58,36 +58,6 @@ fork_test(uint guid, uint child_guid)
 }
 
 int
-testproctable(void)
-{
-  printf(1, "calling getprocs...\n");
-
-  uint max = 5;
-  struct uproc * table = (struct uproc *) malloc(sizeof(struct uproc) * max);
-  int ret = getprocs(max, table);
-  if (ret < 0){
-     printf(1, "Uproc failed with %d", ret);
-  } 
-  else {
-    for(uint i = 0; i < ret; i++){
-      printf(2, "%s\t", table[i].name); 
-      printf(2, "%s\t", table[i].state);
-      printf(2, "%d\t", table[i].pid); 
-      printf(2, "%d\t", table[i].uid);
-      printf(2, "%d\t", table[i].gid);
-      printf(2, "%d\t", table[i].ppid);
-      //is it fine to calculate the elapsed time in-line?
-      printf(2, "%d\t", table[i].elapsed_ticks);
-      printf(2, "%d\t", table[i].cpu_total_ticks);
-      printf(2, "%d\t", table[i].size);
-      printf(2, "\n");
-    }
-  }
-  free(table);
-  return ret;
-}
-
-int
 main(int argc, char*argv[])
 {
   int length = 5;
@@ -96,7 +66,6 @@ main(int argc, char*argv[])
   uint success_nums[] = {0, 100, 12, 2929, 32767};
   uint fail_nums[] = {32768, 40000, 102000, 500000, -1}; //note -1 really means 0xFFF... (max uint)
 
-  testproctable();
 /*  testing cpu_time
   while(1 ==1){
    ;
