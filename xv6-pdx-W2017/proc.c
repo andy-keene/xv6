@@ -103,8 +103,9 @@ userinit(void)
 
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
-
-  p->uid = INITUID; // 1-st process UID/GID in param.h
+  
+  // 1-st process UID/GID in param.h
+  p->uid = INITUID; 
   p->gid = INITGID;
   p->start_ticks = ticks;
   p->state = RUNNABLE;
@@ -315,7 +316,7 @@ scheduler(void)
       proc = p;
       switchuvm(p);
       p->state = RUNNING;
-      //before or after running?
+      //start_ticks before contx swtch
       p->cpu_ticks_in = ticks;
       swtch(&cpu->scheduler, proc->context);
       switchkvm();
@@ -358,7 +359,7 @@ sched(void)
   if(readeflags()&FL_IF)
     panic("sched interruptible");
   intena = cpu->intena;
-  //Which order should this go in/ after the switch or before? 
+  //add cpu run time before swapping out
   proc->cpu_ticks_total += ticks - proc->cpu_ticks_in;
   swtch(&proc->context, cpu->scheduler);
   
@@ -570,7 +571,6 @@ getprocs(uint max, struct uproc *table)
       state = states[p->state];
     else
       state = "???";
-    //unsure if this copy is correct... 
     //both p->name and state < STRMAX
     strncpy(table[i].state, state, STRMAX);
     strncpy(table[i].name, p->name, STRMAX);
