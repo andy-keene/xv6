@@ -155,6 +155,7 @@ UPROGS=\
         _date\
         _test\
         _ps\
+        _time\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)

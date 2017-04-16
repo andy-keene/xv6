@@ -571,7 +571,7 @@ getprocs(uint max, struct uproc *table)
     else
       state = "???";
     //unsure if this copy is correct... 
-    // also both p->name and state < STRMAX
+    //both p->name and state < STRMAX
     strncpy(table[i].state, state, STRMAX);
     strncpy(table[i].name, p->name, STRMAX);
     table[i].pid = p->pid; 
