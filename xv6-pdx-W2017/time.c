@@ -19,9 +19,9 @@ main(int argc, char * argv[])
 
   if(pid == 0){ //child
     int exec_ret = exec(argv[1], &argv[1]);
-
-    if(exec_ret < 0){
-      printf(2, "execution of %s failed\n", argv[0]);
+    //suppress complaints for null execution
+    if(exec_ret < 0 && argv[1]){
+      printf(2, "execution of %s failed\n", argv[1]);
       exit();
     }
   } else {
@@ -29,6 +29,8 @@ main(int argc, char * argv[])
 
     if(wait_ret >= 0)
       print_results(argv[1], uptime() - start_time);
+    else
+      printf(2, "something went wrong with %s", argv[1]);
   }
 
   exit();
