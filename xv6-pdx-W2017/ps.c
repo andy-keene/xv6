@@ -18,6 +18,7 @@ main(int argc, char * argv[])
 {
   //maximum processes possible
   uint max = 64;
+
   struct uproc * table = (struct uproc *) malloc(sizeof(struct uproc) * max);
   int ret = getprocs(max, table);
 

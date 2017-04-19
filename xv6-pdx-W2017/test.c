@@ -9,12 +9,12 @@ set_gid(uint gid)
 {
   printf(2, "Setting GID to %d...\n", gid);
   int ret = setgid(gid);
+  sleep(2 * TPS);
   uint new_gid = getgid();
   if(new_gid == gid)
     printf(2, "SUCCESS: GID is: %d, Return code: %d \n", new_gid, ret);
   else 
     printf(2, "FAIL: UID is: %d, Return code: %d \n", new_gid, ret);
-  sleep(2 * TPS);
 
 }
 
@@ -23,38 +23,44 @@ set_uid(uint uid)
 {
   printf(2, "Setting UID to %d...\n", uid);
   int ret = setuid(uid);
+  sleep(2 * TPS);
   uint new_uid = getuid();
   if(new_uid == uid)
     printf(2, "SUCCESS: UID is: %d, Return code: %d \n", new_uid, ret);
   else 
     printf(2, "FAIL: UID is: %d, Return code: %d \n", new_uid, ret);
-  sleep(2 * TPS);
 }
 
 static void
-fork_test(uint guid, uint child_guid)
+fork_test(uint uid, uint gid)
 {
   int pid;
 
-  printf(2, "Setting UID to %d, GID to %d\n", guid, guid);
-  if(setuid(guid) < 0)
+  printf(2, "(parent) Setting UID to %d, GID to %d\n", uid, gid);
+  if(setuid(uid) < 0)
     printf(2, "Failed to set UID\n");
-  if(setgid(guid) < 0)
+  if(setgid(gid) < 0)
     printf(2, "Failed to set GID\n");
   
-  printf(2, "(Parent) Before fork... UID: %d, GID: %d, PID: %d\n", getuid(), getgid(), getpid());
+  printf(2, "(parent) Before fork... UID: %d, GID: %d, PID: %d\n", getuid(), getgid(), getpid());
   pid = fork();
   if(pid == 0 ) { //child fork
     
-    printf(2, "(Child Before Set) PID: %d, PPID: %d, UID: %d, GID: %d\n", getpid(), getppid(), getuid(), getgid());
-    if(setgid(child_guid) < 0)
-      printf(2, "Setting child gid failed\n");
-    if(setuid(child_guid) < 0)
-      printf(2, "Setting child uid failed\n");
-    printf(2, "(Child After Set) PID: %d, PPID: %d, UID: %d, GID: %d\n", getpid(), getppid(), getuid(), getgid());
+    printf(2, "(child) UID: %d, GID: %d, PID: %d, PPID:%d \n", getuid(), getgid(), getpid(), getppid() );
+    sleep(2 * TPS);
   }
   else
-    sleep(2 * TPS);  //wait for child to exit and return
+    wait();  //wait for child to exit and return
+}
+
+void
+testget(void)
+{
+  uint uid = getuid();
+  uint gid = getgid();
+  uint ppid = getppid();
+  printf(2, "(test) PPID: %d, UID: %d, GID:%d \n", ppid, uid, gid);
+  sleep(2*TPS);
 }
 
 int
@@ -66,6 +72,14 @@ main(int argc, char*argv[])
   uint success_nums[] = {0, 100, 12, 2929, 32767};
   uint fail_nums[] = {32768, 40000, 102000, 500000, -1}; //note -1 really means 0xFFF... (max uint)
 
+  //test fork()
+  fork_test(191, 67);
+  //test getuid(), getgid(), getppid()
+  testget(); 
+
+  //test setuid(), setgid()
+  set_gid(38000);
+  set_uid(38000);
 /*  testing cpu_time
   while(1 ==1){
    ;
@@ -82,7 +96,6 @@ main(int argc, char*argv[])
     set_gid(fail_nums[i]);
   }
 
-  
   printf(1, "**Fork tests**\n");
   fork_test(guid1, guid2);
   exit();
