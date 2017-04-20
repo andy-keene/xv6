@@ -72,19 +72,23 @@ main(int argc, char*argv[])
   uint success_nums[] = {0, 100, 12, 2929, 32767};
   uint fail_nums[] = {32768, 40000, 102000, 500000, -1}; //note -1 really means 0xFFF... (max uint)
 
+  //test fail success get pid/gid
+  sleep(2*TPS);
+  set_gid(50);
+  set_uid(11);
+  sleep(2*TPS);
+  exit();
+
+  //test fail setuid(), setgid()
+  set_gid(38000);
+  set_uid(38000);
+
   //test fork()
   fork_test(191, 67);
+
   //test getuid(), getgid(), getppid()
   testget(); 
 
-  //test setuid(), setgid()
-  set_gid(38000);
-  set_uid(38000);
-/*  testing cpu_time
-  while(1 ==1){
-   ;
-  }
-*/
 
   printf(1, "**Successfull tests**\n");
   for(int i = 0; i < length; i++){
