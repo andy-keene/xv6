@@ -6,6 +6,7 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "proc.h"
+#include "uproc.h"
 
 int
 sys_fork(void)
@@ -95,7 +96,8 @@ int sys_halt(void){
 
 //return date
 int
-sys_date(void){
+sys_date(void)
+{
   struct rtcdate *d;
   //see argptr def in syscall.c for reminder
   if(argptr(0, (void*)&d, sizeof(*d)) < 0)
@@ -103,4 +105,68 @@ sys_date(void){
   //pass struct ptr to cmosttime
   cmostime(d);
   return 0; 
+}
+
+int
+sys_getuid(void)
+{
+  return proc->uid;
+}
+
+int
+sys_getgid(void)
+{
+  return proc->gid;
+}
+
+int
+sys_getppid(void)
+{
+  //init proc has no parent
+  return proc->parent ? proc->parent->pid : proc->pid;
+}
+
+int
+sys_setuid(void)
+{
+  int stack_arg;
+  uint uid;
+
+  if(argint(0, &stack_arg) < 0)
+    return -1;
+  uid = (uint)stack_arg;
+  if(uid < 0 || uid > 32767)
+    return -1;  //out of bounds
+  proc->uid = uid;
+  return 0;
+}
+
+int
+sys_setgid(void)
+{
+  int stack_arg;
+  uint gid;
+
+  if(argint(0, &stack_arg) < 0)
+    return -1;
+  gid = (uint)stack_arg;
+  if(gid < 0 || gid > 32767)
+    return -1;
+  proc->gid = gid; 
+  return 0;
+}
+
+int
+sys_getprocs(void)
+{
+  int stack_arg;
+  struct uproc *table;
+ 
+  //return failure to retrieve arguments
+  if(argint(0, &stack_arg) < 0)
+    return -1; 
+  if(argptr(1, (void*)&table, sizeof(*table)) < 0)
+    return -1;
+  //we're just a wrapper for getprocs() in proc.c
+  return getprocs((uint)stack_arg, table);
 }

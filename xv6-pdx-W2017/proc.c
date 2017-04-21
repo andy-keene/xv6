@@ -6,6 +6,7 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#include "uproc.h"
 
 struct {
   struct spinlock lock;
@@ -65,6 +66,10 @@ found:
   sp -= 4;
   *(uint*)sp = (uint)trapret;
 
+  //initialize running time counts
+  p->cpu_ticks_total = 0;
+  p->cpu_ticks_in = 0;
+
   sp -= sizeof *p->context;
   p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context);
@@ -98,7 +103,10 @@ userinit(void)
 
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
-
+  
+  // 1-st process UID/GID in param.h
+  p->uid = INITUID; 
+  p->gid = INITGID;
   p->start_ticks = ticks;
   p->state = RUNNABLE;
 }
@@ -158,6 +166,8 @@ fork(void)
   safestrcpy(np->name, proc->name, sizeof(proc->name));
  
   pid = np->pid;
+  np->uid = proc->uid;
+  np->gid = proc->gid;
   np->start_ticks = ticks;
 
   // lock to force the compiler to emit the np->state write last.
@@ -306,6 +316,8 @@ scheduler(void)
       proc = p;
       switchuvm(p);
       p->state = RUNNING;
+      //start_ticks before contx swtch
+      p->cpu_ticks_in = ticks;
       swtch(&cpu->scheduler, proc->context);
       switchkvm();
 
@@ -347,7 +359,10 @@ sched(void)
   if(readeflags()&FL_IF)
     panic("sched interruptible");
   intena = cpu->intena;
+  //add cpu run time before swapping out
+  proc->cpu_ticks_total += ticks - proc->cpu_ticks_in;
   swtch(&proc->context, cpu->scheduler);
+  
   cpu->intena = intena;
 }
 #else
@@ -495,11 +510,15 @@ static char *states[] = {
   [ZOMBIE]    "zombie"
 };
 
-//prints buff_size number of whitespaces
+//prints a number with leading zero in hundreths place
 void
-printbuff(const int buff_size){
-  for(int i = 0; i < buff_size; i++)
-    cprintf(" ");
+printnum(const uint num)
+{
+  if(num % 100 > 9)
+    cprintf("%d.%d\t", num / 100, num % 100);
+  else
+    cprintf("%d.%d%d\t", num / 100, 0, num % 100);
+
 }
 
 //PAGEBREAK: 36
@@ -516,7 +535,7 @@ procdump(void)
   char *state;
   uint pc[10];
   uint curr_ticks = ticks;
-  cprintf("\nPID    State    Name    Elapsed    PCs\n");
+  cprintf("\nPID\tName\tUID\tGID\tPPID\tELapsed\tCPU\tState\tSize\tPCs\n");
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->state == UNUSED)
       continue;
@@ -524,27 +543,50 @@ procdump(void)
       state = states[p->state];
     else
       state = "???";
-    //print components, and necessary buffers
-    cprintf("%d", p->pid);
-    printbuff(p->pid > 10 ? 5 : 6);
-    cprintf("%s", state);
-    printbuff(9 - strlen(state));
-    cprintf("%s", p->name);
-    printbuff(8 - strlen(p->name));
-    //calculate time with leading zeros
-    uint elapsed_time = curr_ticks - p->start_ticks;
-    uint hund_secs = elapsed_time % 100;
-    if (hund_secs > 9)
-      cprintf("%d.%d", elapsed_time / 100, hund_secs);
-    else 
-      cprintf("%d.%d%d", elapsed_time / 100, 0, hund_secs);
-    printbuff(6);
+    cprintf("%d\t%s\t%d\t%d\t%d\t", p->pid, p->name, p->uid, p->gid, (p->parent ? p->parent->pid : p->pid) );
+    printnum(curr_ticks - p->start_ticks); 
+    printnum(p->cpu_ticks_total);
+    cprintf("%s\t%d\t", state, p->sz);
     if(p->state == SLEEPING){
       getcallerpcs((uint*)p->context->ebp+2, pc);
       for(i=0; i<10 && pc[i] != 0; i++)
-        cprintf(" %p", pc[i]);
+        cprintf("%p ", pc[i]);
     }
     cprintf("\n");
   }
+}
+
+int
+getprocs(uint max, struct uproc *table)
+{
+  struct proc *p;
+  char *state;
+  uint i = 0;
+
+  acquire(&ptable.lock);
+  for(p = ptable.proc; p < &ptable.proc[NPROC] && i < max; p++){
+    if(p->state == UNUSED)
+      continue;  //skip unused processes
+    if(p->state >= 0 && p->state < NELEM(states) && states[p->state])
+      state = states[p->state];
+    else
+      state = "???";
+    //both p->name and state < STRMAX
+    strncpy(table[i].state, state, STRMAX);
+    strncpy(table[i].name, p->name, STRMAX);
+    table[i].pid = p->pid; 
+    table[i].uid = p->uid;
+    table[i].gid = p->gid;
+    table[i].ppid = (p->parent ? p->parent->pid : p->pid);
+    //is it fine to calculate the elapsed time in-line?
+    table[i].elapsed_ticks = ticks - p->start_ticks;
+    table[i].cpu_total_ticks = p->cpu_ticks_total;
+    table[i].size = p->sz;
+    i++;
+  }
+  release(&ptable.lock);
+
+  //return number of elements filled
+  return i;
 }
 

@@ -58,6 +58,8 @@ struct proc {
   char *kstack;                // Bottom of kernel stack for this process
   enum procstate state;        // Process state
   uint pid;                    // Process ID
+  uint uid;                    // Process user ID (UID)
+  uint gid;                    // Process group ID (GID)
   struct proc *parent;         // Parent process
   struct trapframe *tf;        // Trap frame for current syscall
   struct context *context;     // swtch() here to run process
@@ -67,6 +69,8 @@ struct proc {
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
   uint start_ticks;            // Time of creation
+  uint cpu_ticks_total;        // Total running time of proc in ticks
+  uint cpu_ticks_in;           // Tick count when last scheduled
 };
 
 // Process memory is laid out contiguously, low addresses first:
