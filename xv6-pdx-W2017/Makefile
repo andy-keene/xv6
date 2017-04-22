@@ -72,6 +72,7 @@ CFLAGS = -fno-pic -static -fno-builtin -fno-strict-aliasing -fvar-tracking -fvar
 CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
 #CFLAGS += -DPRINT_SYSCALLS     # CS333 to print syscall traces
 #CFLAGS += -DUSE_BUILTINS       # CS333 to turn on shell built-ins
+CFLAGS += -DCS333_P3P4          # CS333 to use proc lists instead of table (project 3 and 4)
 ASFLAGS = -m32 -gdwarf-2 -Wa,-divide
 # FreeBSD ld wants ``elf_i386_fbsd''
 LDFLAGS += -m $(shell $(LD) -V | grep elf_i386 2>/dev/null)
