@@ -8,9 +8,24 @@
 #include "spinlock.h"
 #include "uproc.h"
 
+//Will use conditional compilation for all P3/P4...
+#ifdef CS333_P3P4
+struct StateLists {
+  struct proc* ready;
+  struct proc* free;
+  struct proc* sleep;
+  struct proc* zombie;
+  struct proc* running;
+  struct proc* embryo;
+};
+#endif
+
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
+  #ifdef CS333_P3P4
+  struct StateLists pLists;
+  #endif
 } ptable;
 
 static struct proc *initproc;
@@ -21,6 +36,81 @@ extern void trapret(void);
 
 static void wakeup1(void *chan);
 
+//Helper functions for P3
+// Remove a process from the given list in O(n) time
+// both asserting the process is in the given state,
+// and that the lock is held; return code accordingly.
+// Add a process to the list (at the end) in O(n) time
+
+// Note that the free list will be handled seperately
+// since we aren't looking for a specific process
+#ifdef CS333_P3P4
+
+//Lock must be held! I think here we want to just return the head.
+/*
+static int
+removeFromStateList(struct proc** stateList, struct proc* p, enum procstate state)
+{
+  if(!holding(&ptable.lock))
+    return -1;
+
+  while(*stateList && *stateList != p)
+    stateList = &(*stateList)->next;
+
+  if(stateList != p || 
+  return 0;
+}
+*/
+
+//Only to be called from userinit()
+//Initially places all processes in the table onto the Unused list
+//since each is initially set to unused.
+//Asserts state of each proccess is "UNUSED"
+//Does not assert the lock is held since it cannot be in userinit()
+static void
+initUnused(struct proc ** unusedList)
+{
+  struct proc *p;
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+  { 
+    //assert state, and add to list
+    if(p->state != UNUSED)
+      panic("Found USED process in UNUSED init");
+    p->next = *unusedList; 
+    *unusedList = p;
+  }
+}
+
+static int
+addToStateList(struct proc** stateList, struct proc* p, enum procstate state)
+{
+  //lock-held assert
+  if(!holding(&ptable.lock))
+    return -1;
+
+  //Add process to end of list (FIFO)
+  while(*stateList)
+    stateList = &(*stateList)->next;
+  *stateList = p;
+  p->state = state;
+  p->next = 0;
+
+  return 0;
+}
+
+static int
+printStateList(struct proc** stateList)
+{
+  int i = 0;
+  while(*stateList)
+  {
+    cprintf("\n(%d) PID: %d\n", i, (*stateList)->pid);
+    stateList = &(*stateList)->next;
+    i++;
+  }
+  return 0;
+}
+#endif
 void
 pinit(void)
 {
@@ -28,11 +118,6 @@ pinit(void)
 }
 
 
-/*
-#ifdef CS333_P3P4
-//do
-#endif
-*/
 //PAGEBREAK: 32
 // Look in the process table for an UNUSED proc.
 // If found, change state to EMBRYO and initialize
@@ -91,7 +176,18 @@ userinit(void)
 {
   struct proc *p;
   extern char _binary_initcode_start[], _binary_initcode_size[];
-  
+  #ifdef CS333_P3P4 
+  //init all lists to null (lock ??)
+  ptable.pLists.ready = 0;
+  ptable.pLists.free = 0;
+  ptable.pLists.sleep = 0;
+  ptable.pLists.zombie = 0;
+  ptable.pLists.running = 0;
+  ptable.pLists.embryo = 0;
+  initUnused(&ptable.pLists.free);
+  printStateList(&ptable.pLists.free);
+  #endif    
+
   p = allocproc();
   initproc = p;
   if((p->pgdir = setupkvm()) == 0)
@@ -115,6 +211,10 @@ userinit(void)
   p->gid = INITGID;
   p->start_ticks = ticks;
   p->state = RUNNABLE;
+  #ifdef CS333_P3P4
+  addToStateList(&ptable.pLists.ready, p, RUNNABLE);
+  printStateList(&ptable.pLists.ready);
+  #endif
 }
 
 // Grow current process's memory by n bytes.
@@ -176,11 +276,18 @@ fork(void)
   np->gid = proc->gid;
   np->start_ticks = ticks;
 
+  #ifndef CS333_P3P4
   // lock to force the compiler to emit the np->state write last.
   acquire(&ptable.lock);
   np->state = RUNNABLE;
   release(&ptable.lock);
-  
+  #else
+  //add new process to runnable list
+  acquire(&ptable.lock);
+  addToStateList(&ptable.pLists.ready, np, RUNNABLE);
+  printStateList(&ptable.pLists.ready);
+  release(&ptable.lock);
+  #endif
   return pid;
 }
 
