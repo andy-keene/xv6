@@ -46,21 +46,55 @@ static void wakeup1(void *chan);
 // since we aren't looking for a specific process
 #ifdef CS333_P3P4
 
-//Lock must be held! I think here we want to just return the head.
-/*
+
+// Removes the given process from the state list
+// Returns 0 if the process was in the correct state and removed form the list
+// -1 if the process was not found
 static int
 removeFromStateList(struct proc** stateList, struct proc* p, enum procstate state)
 {
   if(!holding(&ptable.lock))
+    panic("Not holding lock when accessing StateList"); //return -1;
+  //list is empty
+  if(!(*stateList))
     return -1;
 
-  while(*stateList && *stateList != p)
+  while(*stateList)
+  {
+    if(*stateList == p)
+    {
+      if(p->state != state)
+        panic("Process not in correct state");      
+      *stateList = p->next;
+      return 0;
+    }
     stateList = &(*stateList)->next;
+  }
+  //failed to find list
+  return -1;
+}
 
-  if(stateList != p || 
+// Asserts lock is held and proc * p is in "state"
+// Returns 0 and stateList head as p on success
+// or -1 on failure to find a process (empty list)
+static int
+popHeadFromStateList(struct proc** stateList, struct proc** p, enum procstate state)
+{
+  if(!holding(&ptable.lock))
+    panic("Not holding lock when accessing StateList"); //return -1;
+  //list is empty
+  if(!(*stateList))
+    return -1;
+  //else, pull from head of list
+  *p = *stateList;
+  *stateList = (*stateList)->next;
+  //assert state
+  if((*p)->state != state)
+    panic("Process not in correct state");
+  cprintf("Returning 0 for PID %d", (*p)->pid);
   return 0;
 }
-*/
+
 
 //Only to be called from userinit()
 //Initially places all processes in the table onto the Unused list
@@ -81,8 +115,9 @@ initUnused(struct proc ** unusedList)
   }
 }
 
+//Adds to end of statelist
 static int
-addToStateList(struct proc** stateList, struct proc* p, enum procstate state)
+appendToStateList(struct proc** stateList, struct proc* p, enum procstate state)
 {
   //lock-held assert
   if(!holding(&ptable.lock))
@@ -94,6 +129,21 @@ addToStateList(struct proc** stateList, struct proc* p, enum procstate state)
   *stateList = p;
   p->state = state;
   p->next = 0;
+
+  return 0;
+}
+
+//Adds to head of state list
+static int
+prependToStateList(struct proc** stateList, struct proc* p, enum procstate state)
+{
+  //lock-held assert
+  if(!holding(&ptable.lock))
+    return -1;
+
+  p->next = *stateList;
+  *stateList = p;
+  p->state = state;
 
   return 0;
 }
@@ -128,22 +178,49 @@ allocproc(void)
 {
   struct proc *p;
   char *sp;
+  #ifdef CS333_P3P4
+  int rc;
+  #endif
 
+  #ifndef CS333_P3P4
   acquire(&ptable.lock);
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     if(p->state == UNUSED)
       goto found;
   release(&ptable.lock);
+  #else 
+  acquire(&ptable.lock);
+  cprintf("Aquiring lock.....\n");
+  cprintf("&Statelist: %d.....\n", &ptable.pLists.free);
+  cprintf("*Statelist: %d.....\n", ptable.pLists.free);
+  rc = popHeadFromStateList(&ptable.pLists.free, &p, UNUSED);
+  cprintf("RC: %d .....\n", rc);
+  if(rc == 0)
+    goto found;
+  release(&ptable.lock);
+  #endif
   return 0;
 
 found:
+  #ifndef CS333_P3P4 
   p->state = EMBRYO;
+  #else
+  prependToStateList(&ptable.pLists.embryo, p, EMBRYO);
+  #endif
   p->pid = nextpid++;
   release(&ptable.lock);
 
   // Allocate kernel stack.
   if((p->kstack = kalloc()) == 0){
+    #ifndef CS333_P3P4
     p->state = UNUSED;
+    #else
+    //we must reaqquire the lock to switch the process back to the free list
+    acquire(&ptable.lock);
+    removeFromStateList(&ptable.pLists.embryo, p, EMBRYO);
+    prependToStateList(&ptable.pLists.free, p, UNUSED);
+    release(&ptable.lock);
+    #endif
     return 0;
   }
   sp = p->kstack + KSTACKSIZE;
@@ -184,7 +261,9 @@ userinit(void)
   ptable.pLists.zombie = 0;
   ptable.pLists.running = 0;
   ptable.pLists.embryo = 0;
+  acquire(&ptable.lock);
   initUnused(&ptable.pLists.free);
+  release(&ptable.lock);
   printStateList(&ptable.pLists.free);
   #endif    
 
@@ -212,7 +291,7 @@ userinit(void)
   p->start_ticks = ticks;
   p->state = RUNNABLE;
   #ifdef CS333_P3P4
-  addToStateList(&ptable.pLists.ready, p, RUNNABLE);
+  appendToStateList(&ptable.pLists.ready, p, RUNNABLE);
   printStateList(&ptable.pLists.ready);
   #endif
 }
@@ -284,7 +363,7 @@ fork(void)
   #else
   //add new process to runnable list
   acquire(&ptable.lock);
-  addToStateList(&ptable.pLists.ready, np, RUNNABLE);
+  appendToStateList(&ptable.pLists.ready, np, RUNNABLE);
   printStateList(&ptable.pLists.ready);
   release(&ptable.lock);
   #endif
