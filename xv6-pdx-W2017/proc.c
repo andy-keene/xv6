@@ -71,6 +71,7 @@ removeFromStateList(struct proc** stateList, struct proc* p, enum procstate stat
     stateList = &(*stateList)->next;
   }
   //failed to find list
+  panic("Failed to remove certain process from state list");
   return -1;
 }
 
@@ -190,13 +191,14 @@ allocproc(void)
   release(&ptable.lock);
   #else 
   acquire(&ptable.lock);
-  cprintf("Aquiring lock.....\n");
-  cprintf("&Statelist: %d.....\n", &ptable.pLists.free);
-  cprintf("*Statelist: %d.....\n", ptable.pLists.free);
+//  cprintf("Aquiring lock.....\n");
+//  cprintf("&Statelist: %d.....\n", &ptable.pLists.free);
+//  cprintf("*Statelist: %d.....\n", ptable.pLists.free);
   rc = popHeadFromStateList(&ptable.pLists.free, &p, UNUSED);
-  cprintf("RC: %d .....\n", rc);
+//  cprintf("RC: %d .....\n", rc);
   if(rc == 0)
     goto found;
+  cprintf("Failed to find free process..\n");
   release(&ptable.lock);
   #endif
   return 0;
@@ -217,6 +219,7 @@ found:
     #else
     //we must reaqquire the lock to switch the process back to the free list
     acquire(&ptable.lock);
+    cprintf("Failed to allocate kernel mem. for process..\n");
     removeFromStateList(&ptable.pLists.embryo, p, EMBRYO);
     prependToStateList(&ptable.pLists.free, p, UNUSED);
     release(&ptable.lock);
@@ -288,9 +291,11 @@ userinit(void)
   // 1-st process UID/GID in param.h
   p->uid = INITUID; 
   p->gid = INITGID;
-  p->start_ticks = ticks;
-  p->state = RUNNABLE;
+  p->start_ticks = ticks; 
   #ifdef CS333_P3P4
+  p->state = RUNNABLE;
+  #else
+  removeFromStateList(&ptable.pLists.embryo, p, EMBRYO); //remove from embryo list
   appendToStateList(&ptable.pLists.ready, p, RUNNABLE);
   printStateList(&ptable.pLists.ready);
   #endif
@@ -325,7 +330,7 @@ fork(void)
   int i, pid;
   struct proc *np;
 
-  // Allocate process.
+  // Allocate process; on success np in EMBRYO
   if((np = allocproc()) == 0)
     return -1;
 
@@ -361,8 +366,9 @@ fork(void)
   np->state = RUNNABLE;
   release(&ptable.lock);
   #else
-  //add new process to runnable list
+  //Move np from EMBRYO->RUNNABLE
   acquire(&ptable.lock);
+  removeFromStateList(&ptable.pLists.embryo, np, EMBRYO);
   appendToStateList(&ptable.pLists.ready, np, RUNNABLE);
   printStateList(&ptable.pLists.ready);
   release(&ptable.lock);
@@ -409,7 +415,7 @@ exit(void)
         wakeup1(initproc);
     }
   }
-
+ 
   // Jump into the scheduler, never to return.
   proc->state = ZOMBIE;
   sched();
@@ -524,6 +530,7 @@ wait(void)
         p->kstack = 0;
         freevm(p->pgdir);
         p->state = UNUSED;
+//        prependToStateList(&ptable.pLists.free, p, UNUSED); 
         p->pid = 0;
         p->parent = 0;
         p->name[0] = 0;
@@ -591,6 +598,7 @@ scheduler(void)
     release(&ptable.lock);
     // if idle, wait for next interrupt
     if (idle) {
+      cprintf("Scheduler sleeping...\n");
       sti();
       hlt();
     }
@@ -607,13 +615,18 @@ scheduler(void)
   for(;;){
     // Enable interrupts on this processor.
     sti();
-
     idle = 1;  // assume idle unless we schedule a process
-    // Loop over process table looking for process to run.
+
     acquire(&ptable.lock);
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
+    /*Get first process in-line to be run
+    acquire(&ptable.lock);
+    if(popHeadFromStateList(&ptable.pLists.ready, &p, RUNNABLE) == 0){
+      removeFromStateList(&ptable.pLists.ready, p, RUNNABLE);
+  */
+      //cprintf("Choose %s process to put in running state\n", p->name);
 
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
@@ -621,7 +634,7 @@ scheduler(void)
       idle = 0;  // not idle this timeslice
       proc = p;
       switchuvm(p);
-      p->state = RUNNING;
+      p->state = RUNNING;               // <-- Need to add to running state when ready
       //start_ticks before contx swtch
       p->cpu_ticks_in = ticks;
       swtch(&cpu->scheduler, proc->context);
@@ -693,6 +706,7 @@ yield(void)
 {
   acquire(&ptable.lock);  //DOC: yieldlock
   proc->state = RUNNABLE;
+  appendToStateList(&ptable.pLists.ready, proc, RUNNABLE); 
   sched();
   release(&ptable.lock);
 }
@@ -854,6 +868,33 @@ printnum(const uint num)
 
 }
 
+//testing print lists
+void
+printList(struct proc ** stateList)
+{
+  struct proc *p;
+  int i = 0;
+  char *state; 
+  uint curr_ticks = ticks;
+
+  cprintf("\nSpot\tPID\tName\tUID\tGID\tPPID\tELapsed\tCPU\tState\tSize\n");
+  while(*stateList)
+  {
+    p = *stateList;							// <--- This should be swapped to be stateList
+    if(p->state >= 0 && p->state < NELEM(states) && states[p->state])
+      state = states[p->state];
+    else
+      state = "???";
+    cprintf("%d\t%d\t%s\t%d\t%d\t%d\t", i, p->pid, p->name, p->uid, p->gid, (p->parent ? p->parent->pid : p->pid) );
+    printnum(curr_ticks - p->start_ticks); 
+    printnum(p->cpu_ticks_total);
+    cprintf("%s\t%d\n", state, p->sz);
+    stateList = &(*stateList)->next;
+    i++;
+  }
+
+
+}
 //PAGEBREAK: 36
 // Print a process listing to console.  For debugging.
 // Runs when user types ^P on console.
@@ -863,6 +904,27 @@ printnum(const uint num)
 void
 procdump(void)
 {
+  //test for watching processes
+  cprintf("UNUSED");
+  printList(&ptable.pLists.free);
+  cprintf("\n");
+  cprintf("EMBRYO");
+  printList(&ptable.pLists.embryo);
+  cprintf("\n");
+  cprintf("READY");
+  printList(&ptable.pLists.ready);
+  cprintf("\n");
+  cprintf("RUNNING");
+  printList(&ptable.pLists.running);
+  cprintf("\n");
+  cprintf("ZOMBIE");
+  printList(&ptable.pLists.zombie);
+  cprintf("\n");
+  cprintf("SLEEPING");
+  printList(&ptable.pLists.sleep);
+  cprintf("\n");
+
+
   int i;
   struct proc *p;
   char *state;
