@@ -8,6 +8,7 @@
 #include "spinlock.h"
 #include "uproc.h"
 
+#define NULL 0
 //Will use conditional compilation for all P3/P4...
 #ifdef CS333_P3P4
 struct StateLists {
@@ -36,6 +37,15 @@ extern void trapret(void);
 
 static void wakeup1(void *chan);
 
+#ifdef CS333_P3P4
+void
+printList(struct proc ** stateList);
+
+static void
+checkProcs(char *s);
+#endif
+
+
 //Helper functions for P3
 // Remove a process from the given list in O(n) time
 // both asserting the process is in the given state,
@@ -54,24 +64,26 @@ static int
 removeFromStateList(struct proc** stateList, struct proc* p, enum procstate state)
 {
   if(!holding(&ptable.lock))
-    panic("Not holding lock when accessing StateList"); //return -1;
-  //list is empty
+    panic("Not holding lock when accessing StateList");
   if(!(*stateList))
-    return -1;
+    panic("Removing from empty list");
 
-  while(*stateList)
-  {
-    if(*stateList == p)
-    {
-      if(p->state != state)
-        panic("Process not in correct state");      
-      *stateList = p->next;
-      return 0;
-    }
-    stateList = &(*stateList)->next;
+  if(*stateList == p){
+    *stateList = (*stateList)->next;
+    p->next = 0;
+    return 0;
+  }  
+  else{
+    struct proc *curr = *stateList;
+    while(curr->next){
+      if(curr->next == p){
+        curr->next = curr->next->next;
+        p->next = 0;
+        return 0;
+      }
+      curr = curr->next;
+     }
   }
-  //failed to find list
-  panic("Failed to remove certain process from state list");
   return -1;
 }
 
@@ -82,7 +94,7 @@ static int
 popHeadFromStateList(struct proc** stateList, struct proc** p, enum procstate state)
 {
   if(!holding(&ptable.lock))
-    panic("Not holding lock when accessing StateList"); //return -1;
+    panic("Not holding lock when accessing StateList");
   //list is empty
   if(!(*stateList))
     return -1;
@@ -92,7 +104,7 @@ popHeadFromStateList(struct proc** stateList, struct proc** p, enum procstate st
   //assert state
   if((*p)->state != state)
     panic("Process not in correct state");
-  cprintf("Returning 0 for PID %d", (*p)->pid);
+
   return 0;
 }
 
@@ -103,7 +115,7 @@ popHeadFromStateList(struct proc** stateList, struct proc** p, enum procstate st
 //Asserts state of each proccess is "UNUSED"
 //Does not assert the lock is held since it cannot be in userinit()
 static void
-initUnused(struct proc ** unusedList)
+initUnused(void)
 {
   struct proc *p;
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
@@ -111,8 +123,8 @@ initUnused(struct proc ** unusedList)
     //assert state, and add to list
     if(p->state != UNUSED)
       panic("Found USED process in UNUSED init");
-    p->next = *unusedList; 
-    *unusedList = p;
+    p->next = ptable.pLists.free; 
+    ptable.pLists.free = p;
   }
 }
 
@@ -122,12 +134,16 @@ appendToStateList(struct proc** stateList, struct proc* p, enum procstate state)
 {
   //lock-held assert
   if(!holding(&ptable.lock))
-    return -1;
+    panic("Not holding lock when accessing state list");
 
-  //Add process to end of list (FIFO)
-  while(*stateList)
-    stateList = &(*stateList)->next;
-  *stateList = p;
+  if(!*stateList){
+    *stateList = p;
+  } else {
+    struct proc *curr = *stateList;
+    while(curr->next)
+      curr = curr->next;
+    curr->next = p;
+  }
   p->state = state;
   p->next = 0;
 
@@ -140,7 +156,7 @@ prependToStateList(struct proc** stateList, struct proc* p, enum procstate state
 {
   //lock-held assert
   if(!holding(&ptable.lock))
-    return -1;
+    panic("Not holding lock when accessing state list");
 
   p->next = *stateList;
   *stateList = p;
@@ -149,19 +165,8 @@ prependToStateList(struct proc** stateList, struct proc* p, enum procstate state
   return 0;
 }
 
-static int
-printStateList(struct proc** stateList)
-{
-  int i = 0;
-  while(*stateList)
-  {
-    cprintf("\n(%d) PID: %d\n", i, (*stateList)->pid);
-    stateList = &(*stateList)->next;
-    i++;
-  }
-  return 0;
-}
 #endif
+
 void
 pinit(void)
 {
@@ -191,11 +196,7 @@ allocproc(void)
   release(&ptable.lock);
   #else 
   acquire(&ptable.lock);
-//  cprintf("Aquiring lock.....\n");
-//  cprintf("&Statelist: %d.....\n", &ptable.pLists.free);
-//  cprintf("*Statelist: %d.....\n", ptable.pLists.free);
   rc = popHeadFromStateList(&ptable.pLists.free, &p, UNUSED);
-//  cprintf("RC: %d .....\n", rc);
   if(rc == 0)
     goto found;
   cprintf("Failed to find free process..\n");
@@ -265,9 +266,8 @@ userinit(void)
   ptable.pLists.running = 0;
   ptable.pLists.embryo = 0;
   acquire(&ptable.lock);
-  initUnused(&ptable.pLists.free);
+  initUnused();
   release(&ptable.lock);
-  printStateList(&ptable.pLists.free);
   #endif    
 
   p = allocproc();
@@ -297,7 +297,7 @@ userinit(void)
   #else
   removeFromStateList(&ptable.pLists.embryo, p, EMBRYO); //remove from embryo list
   appendToStateList(&ptable.pLists.ready, p, RUNNABLE);
-  printStateList(&ptable.pLists.ready);
+  checkProcs("calling from userinit()");
   #endif
 }
 
@@ -368,9 +368,12 @@ fork(void)
   #else
   //Move np from EMBRYO->RUNNABLE
   acquire(&ptable.lock);
+  checkProcs(" calling from fork() 1");
+  cprintf("In fork, removing");
   removeFromStateList(&ptable.pLists.embryo, np, EMBRYO);
+  cprintf("In fork, adding");
   appendToStateList(&ptable.pLists.ready, np, RUNNABLE);
-  printStateList(&ptable.pLists.ready);
+  checkProcs(" calling from fork() 2");
   release(&ptable.lock);
   #endif
   return pid;
@@ -621,13 +624,7 @@ scheduler(void)
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
-    /*Get first process in-line to be run
-    acquire(&ptable.lock);
-    if(popHeadFromStateList(&ptable.pLists.ready, &p, RUNNABLE) == 0){
-      removeFromStateList(&ptable.pLists.ready, p, RUNNABLE);
-  */
-      //cprintf("Choose %s process to put in running state\n", p->name);
-
+      
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
@@ -706,7 +703,7 @@ yield(void)
 {
   acquire(&ptable.lock);  //DOC: yieldlock
   proc->state = RUNNABLE;
-  appendToStateList(&ptable.pLists.ready, proc, RUNNABLE); 
+//  appendToStateList(&ptable.pLists.ready, proc, RUNNABLE); 
   sched();
   release(&ptable.lock);
 }
@@ -872,15 +869,14 @@ printnum(const uint num)
 void
 printList(struct proc ** stateList)
 {
-  struct proc *p;
+  struct proc *p = *stateList;
   int i = 0;
   char *state; 
   uint curr_ticks = ticks;
 
   cprintf("\nSpot\tPID\tName\tUID\tGID\tPPID\tELapsed\tCPU\tState\tSize\n");
-  while(*stateList)
+  while(p)
   {
-    p = *stateList;							// <--- This should be swapped to be stateList
     if(p->state >= 0 && p->state < NELEM(states) && states[p->state])
       state = states[p->state];
     else
@@ -889,7 +885,7 @@ printList(struct proc ** stateList)
     printnum(curr_ticks - p->start_ticks); 
     printnum(p->cpu_ticks_total);
     cprintf("%s\t%d\n", state, p->sz);
-    stateList = &(*stateList)->next;
+    p = p->next;
     i++;
   }
 
@@ -985,3 +981,64 @@ getprocs(uint max, struct uproc *table)
   return i;
 }
 
+//Given debug code
+#ifdef CS333_P3P4
+static int
+findProc(struct proc *p)
+{
+  struct proc *np;
+
+  np = ptable.pLists.free;
+  while (np != NULL) {
+    if (np == p) return 1;
+    np = np->next;
+  }
+  np = ptable.pLists.embryo;
+  while (np != NULL) {
+    if (np == p) return 1;
+    np = np->next;
+  }
+  np = ptable.pLists.running;
+  while (np != NULL) {
+    if (np == p) return 1;
+    np = np->next;
+  }
+  np = ptable.pLists.sleep;
+  while (np != NULL) {
+    if (np == p) return 1;
+    np = np->next;
+  }
+  np = ptable.pLists.zombie;
+  while (np != NULL) {
+    if (np == p) return 1;
+    np = np->next;
+  }
+
+  np = ptable.pLists.ready;
+  while (np != NULL) {
+    if (np == p) return 1;
+    np = np->next;
+  }
+  
+  return 0; // not found
+}
+
+// argument 's' is a string to print on not found
+static void
+checkProcs(char *s)
+{
+  int found;
+  int isholding;
+  struct proc *p;
+
+  isholding = holding(&ptable.lock);
+  if (!isholding) acquire(&ptable.lock);
+  for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+    found = findProc(p);
+    if (found) continue;
+    cprintf("For checkProcs(%s)\n", s);
+    panic("Process array and lists inconsistent\n");
+  }
+  if (!isholding) release(&ptable.lock);
+}
+#endif
