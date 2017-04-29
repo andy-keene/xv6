@@ -1066,4 +1066,50 @@ checkProcs(char *s)
   }
   if (!isholding) release(&ptable.lock);
 }
+
+// For console-R
+// print PID.1 -> PID.2 -> ... for free list
+void
+readylistinfo(void)
+{
+  struct proc *curr = ptable.pLists.ready;
+
+  cprintf("Ready List Processes:\n");
+  while(curr){
+    cprintf("%d", curr->pid);
+    if(curr->next)
+      cprintf(" -> ");
+    curr = curr->next;
+  }
+  //terminate listing
+  cprintf("\n");
+}
+
+void
+freelistinfo(void)
+{
+  struct proc *curr = ptable.pLists.free;
+  int num = 0;
+
+  while(curr){
+    num += 1;
+    curr = curr->next;
+  }
+
+  cprintf("Free List Size: %d processes\n", num);
+}
+/*
+void
+sleepinglistinfo(void)
+{
+
+}
+
+void
+zombielistinfo(void)
+{
+
+}
+
+*/
 #endif

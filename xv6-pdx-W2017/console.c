@@ -189,7 +189,7 @@ struct {
 void
 consoleintr(int (*getc)(void))
 {
-  int c, doprocdump = 0;
+  int c, doprocdump = 0, dofreelist = 0, doreadylist = 0;
 
   acquire(&cons.lock);
   while((c = getc()) >= 0){
@@ -210,6 +210,12 @@ consoleintr(int (*getc)(void))
         consputc(BACKSPACE);
       }
       break;
+    case C('R'):
+      doreadylist = 1; 
+      break;
+    case C('F'):
+      dofreelist = 1; 
+      break;
     default:
       if(c != 0 && input.e-input.r < INPUT_BUF){
         c = (c == '\r') ? '\n' : c;
@@ -226,6 +232,14 @@ consoleintr(int (*getc)(void))
   release(&cons.lock);
   if(doprocdump) {
     procdump();  // now call procdump() wo. cons.lock held
+  }
+  if(doreadylist) {
+    cprintf("doing ready list\n..");
+    readylistinfo();
+  }
+  if(dofreelist) {
+    cprintf("doing free list\n");
+    freelistinfo();
   }
 }
 
