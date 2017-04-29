@@ -68,15 +68,15 @@ removeFromStateList(struct proc** stateList, struct proc* p, enum procstate stat
     panic("Not holding lock when accessing state list (remove)");
   if(p->state != state)
     panic("Process has incorrect state");
-  if(!(*stateList))
-    return -1;
+//  if(!(*stateList))
+//    return -1;
 
   if(*stateList == p){
     *stateList = (*stateList)->next;
     p->next = 0;
     return 0;
   }  
-  else{
+  else if(*stateList){
     struct proc *curr = *stateList;
     while(curr->next){
       if(curr->next == p){
@@ -87,6 +87,8 @@ removeFromStateList(struct proc** stateList, struct proc* p, enum procstate stat
       curr = curr->next;
      }
   }
+  cprintf("Process: %s not found on statelist: %d\n", p->name, state);
+  panic("Process not found");
   return -1;
 }
 
@@ -228,6 +230,7 @@ found:
   #ifndef CS333_P3P4 
   p->state = EMBRYO;
   #else
+  //move p -> EMBRYO
   prependToStateList(&ptable.pLists.embryo, p, EMBRYO);
   #endif
   p->pid = nextpid++;
@@ -239,8 +242,8 @@ found:
     p->state = UNUSED;
     #else
     //we must reaqquire the lock to switch the process back to the free list
+    //move p EMBRYO -> RUNNING
     acquire(&ptable.lock);
-    cprintf("Failed to allocate kernel mem. for process..\n");
     removeFromStateList(&ptable.pLists.embryo, p, EMBRYO);
     prependToStateList(&ptable.pLists.free, p, UNUSED);
     release(&ptable.lock);
@@ -278,13 +281,6 @@ userinit(void)
   struct proc *p;
   extern char _binary_initcode_start[], _binary_initcode_size[];
   #ifdef CS333_P3P4 
-  //init all lists to null (lock ??)
-  ptable.pLists.ready = 0;
-  ptable.pLists.free = 0;
-  ptable.pLists.sleep = 0;
-  ptable.pLists.zombie = 0;
-  ptable.pLists.running = 0;
-  ptable.pLists.embryo = 0;
   acquire(&ptable.lock);
   initUnused();
   release(&ptable.lock);
