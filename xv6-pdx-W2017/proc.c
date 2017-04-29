@@ -485,7 +485,8 @@ exit(void)
 
   // Jump into the scheduler, never to return.
   removeFromStateList(&ptable.pLists.running, proc, RUNNING);
-  proc->state = ZOMBIE;
+  prependToStateList(&ptable.pLists.zombie, proc, ZOMBIE);
+//  proc->state = ZOMBIE;
   sched();
   panic("zombie exit");
 }
@@ -555,8 +556,10 @@ wait(void)
         kfree(p->kstack);
         p->kstack = 0;
         freevm(p->pgdir);
-        p->state = UNUSED;
-//        prependToStateList(&ptable.pLists.free, p, UNUSED); 
+//        p->state = UNUSED;        
+        // move p ZOMIE->UNUSED
+        removeFromStateList(&ptable.pLists.zombie, p, ZOMBIE);
+        prependToStateList(&ptable.pLists.free, p, UNUSED); 
         p->pid = 0;
         p->parent = 0;
         p->name[0] = 0;
