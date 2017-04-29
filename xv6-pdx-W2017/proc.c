@@ -209,21 +209,19 @@ allocproc(void)
   #ifdef CS333_P3P4
   int rc;
   #endif
-
-  #ifndef CS333_P3P4
+ 
   acquire(&ptable.lock);
+  #ifndef CS333_P3P4
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     if(p->state == UNUSED)
       goto found;
-  release(&ptable.lock);
   #else 
-  acquire(&ptable.lock);
   rc = popHeadFromStateList(&ptable.pLists.free, &p, UNUSED);
   if(rc == 0)
     goto found;
-  cprintf("Failed to find free process..\n");
-  release(&ptable.lock);
+  //cprintf("Failed to find free process..\n");
   #endif
+  release(&ptable.lock);
   return 0;
 
 found:
