@@ -811,11 +811,30 @@ wakeup1(void *chan)
       p->state = RUNNABLE;
 }
 #else
+
+// wake up all processes sleeping on chann
+// efficiency: O(|sleepingList|) 
 static void
 wakeup1(void *chan)
 {
   struct proc *p;
+  struct proc *curr = ptable.pLists.sleep;
 
+  //look through sleep list and remove those on given *chan
+  while(curr){
+    if(curr->chan == chan){
+      p = curr;
+      curr = curr->next;  //skip ahead since we must delete p
+      //move p SLEEPING -> RUNNABLE
+      removeFromStateList(&ptable.pLists.sleep, p, SLEEPING);
+      appendToStateList(&ptable.pLists.ready, p, RUNNABLE);
+    }
+    else{
+      curr = curr->next;
+    }
+  }
+
+/*
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     if(p->state == SLEEPING && p->chan == chan){
       //move p SLEEPING -> RUNNABLE
@@ -823,6 +842,8 @@ wakeup1(void *chan)
         panic("Process not found on sleeping list");
       appendToStateList(&ptable.pLists.ready, p, RUNNABLE);
     }
+*/
+
 }
 #endif
 
