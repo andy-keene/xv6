@@ -646,18 +646,14 @@ scheduler(void)
     acquire(&ptable.lock);
     if(popHeadFromStateList(&ptable.pLists.ready, &p, RUNNABLE) == 0){
       prependToStateList(&ptable.pLists.running, p, RUNNING);      
-/*    
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state != RUNNABLE)
-        continue;
-*/    
+      
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
       idle = 0;  // not idle this timeslice
       proc = p;
       switchuvm(p);
-      p->state = RUNNING;               // <-- NOT READY: Need to add to running state when ready
+     // p->state = RUNNING;               // <-- NOT READY: Need to add to running state when ready
       //start_ticks before contx swtch
       p->cpu_ticks_in = ticks;
       swtch(&cpu->scheduler, proc->context);
@@ -1105,6 +1101,8 @@ readylistinfo(void)
   cprintf("\n");
 }
 
+// For console-F
+// prints number of free processes available 
 void
 freelistinfo(void)
 {
@@ -1118,18 +1116,44 @@ freelistinfo(void)
 
   cprintf("Free List Size: %d processes\n", num);
 }
-/*
+
+// For console-S
+// print PID.1 -> PID.2 -> ... for sleeping list
 void
 sleepinglistinfo(void)
 {
+  struct proc *curr = ptable.pLists.sleep;
 
+  cprintf("Sleeping List Processes:\n");
+  while(curr){
+    cprintf("%d", curr->pid);
+    if(curr->next)
+      cprintf(" -> ");
+    curr = curr->next;
+  }
+  //terminate listing
+  cprintf("\n");
 }
 
+// For console-Z
+// print (PID.1, PPID.1) -> ... for zombie list
 void
 zombielistinfo(void)
 {
+  struct proc *curr = ptable.pLists.zombie;
+
+  cprintf("Zombie List Processes:\n");
+  while(curr){
+    //is checking for init ever possible on zombie?
+    cprintf("(%d, %d)", curr->pid, curr->parent ? curr->parent->pid : curr->pid);
+    if(curr->next)
+      cprintf(" -> ");
+    curr = curr->next;
+  }
+  //terminate listing
+  cprintf("\n");
 
 }
 
-*/
+
 #endif
