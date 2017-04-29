@@ -169,7 +169,10 @@ prependToStateList(struct proc** stateList, struct proc* p, enum procstate state
 }
 
 /*
-//untested for now.
+// Removes process p fromList->toList
+// asserts p is in given state (in remove), removes it from the list, and prepends it to the given toList
+// panics if p has incorrect state, or is not found
+// efficiency: O(n)
 static int
 moveFromToStateList(struct proc **fromList, struct proc **toList, struct proc *p, enum procstate fromState, enum procstate toState)
 {
@@ -179,7 +182,7 @@ moveFromToStateList(struct proc **fromList, struct proc **toList, struct proc *p
     panic("Failed to remove from statelist");
   } 
   else {
-    appendToStateList(toList, p, toState); 
+    prependToStateList(toList, p, toState); 
   }
   return 0;
 }
@@ -481,6 +484,7 @@ exit(void)
   }
 
   // Jump into the scheduler, never to return.
+  removeFromStateList(&ptable.pLists.running, proc, RUNNING);
   proc->state = ZOMBIE;
   sched();
   panic("zombie exit");
@@ -641,6 +645,7 @@ scheduler(void)
 
     acquire(&ptable.lock);
     if(popHeadFromStateList(&ptable.pLists.ready, &p, RUNNABLE) == 0){
+      prependToStateList(&ptable.pLists.running, p, RUNNING);      
 /*    
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
@@ -726,6 +731,9 @@ yield(void)
   #ifndef CS333_P3P4
   proc->state = RUNNABLE;
   #else
+  // move proc RUNNING->RUNNABLE
+  if(removeFromStateList(&ptable.pLists.running, proc, RUNNING) < 0)
+    panic("Process not found on RUNNING list");
   appendToStateList(&ptable.pLists.ready, proc, RUNNABLE); 
   #endif
   sched();
@@ -776,7 +784,14 @@ sleep(void *chan, struct spinlock *lk)
 
   // Go to sleep.
   proc->chan = chan;
+  #ifndef CS333_P3P4
   proc->state = SLEEPING;
+  #else
+  // move proc RUNNING -> SLEEPING
+  if(removeFromStateList(&ptable.pLists.running, proc, RUNNING) < 0)
+    panic("Process not found on RUNNING list (sleep)");
+  prependToStateList(&ptable.pLists.sleep, proc, SLEEPING);
+  #endif
   sched();
 
   // Tidy up.
@@ -809,9 +824,12 @@ wakeup1(void *chan)
   struct proc *p;
 
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
-    if(p->state == SLEEPING && p->chan == chan)
-      appendToStateList(&ptable.pLists.ready, p, RUNNABLE);//p->state = RUNNABLE;
-
+    if(p->state == SLEEPING && p->chan == chan){
+      //move p SLEEPING -> RUNNABLE
+      if(removeFromStateList(&ptable.pLists.sleep, p, SLEEPING) < 0)
+        panic("Process not found on sleeping list");
+      appendToStateList(&ptable.pLists.ready, p, RUNNABLE);
+    }
 }
 #endif
 
@@ -858,9 +876,11 @@ kill(int pid)
     if(p->pid == pid){
       p->killed = 1;
       // Wake process from sleep if necessary.
-      if(p->state == SLEEPING)
+      if(p->state == SLEEPING){
+        if(removeFromStateList(&ptable.pLists.sleep, p, SLEEPING) < 0)
+          panic("Process not found on RUNNING list");
         appendToStateList(&ptable.pLists.ready, p, RUNNABLE); //p->state = RUNNABLE;
-
+      }
       release(&ptable.lock);
       return 0;
     }
