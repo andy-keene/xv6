@@ -51,22 +51,25 @@ checkProcs(char *s);
 // both asserting the process is in the given state,
 // and that the lock is held; return code accordingly.
 // Add a process to the list (at the end) in O(n) time
-
 // Note that the free list will be handled seperately
 // since we aren't looking for a specific process
-#ifdef CS333_P3P4
 
+#ifdef CS333_P3P4
 
 // Removes the given process from the state list
 // Returns 0 if the process was in the correct state and removed form the list
 // -1 if the process was not found
+// efficiency: O(n)
 static int
 removeFromStateList(struct proc** stateList, struct proc* p, enum procstate state)
 {
+  //Assert lock is held, and list is non-empty
   if(!holding(&ptable.lock))
-    panic("Not holding lock when accessing StateList");
+    panic("Not holding lock when accessing state list (remove)");
+  if(p->state != state)
+    panic("Process has incorrect state");
   if(!(*stateList))
-    panic("Removing from empty list");
+    return -1;
 
   if(*stateList == p){
     *stateList = (*stateList)->next;
@@ -90,30 +93,30 @@ removeFromStateList(struct proc** stateList, struct proc* p, enum procstate stat
 // Asserts lock is held and proc * p is in "state"
 // Returns 0 and stateList head as p on success
 // or -1 on failure to find a process (empty list)
+// efficiency: O(1)
 static int
 popHeadFromStateList(struct proc** stateList, struct proc** p, enum procstate state)
 {
+  //Assert lock is held, and list is non-empty
   if(!holding(&ptable.lock))
-    panic("Not holding lock when accessing StateList");
-  //list is empty
+    panic("Not holding lock when accessing state list (pop)");
+
+  //Try to pop head
   if(!(*stateList))
     return -1;
-  //else, pull from head of list
   *p = *stateList;
   *stateList = (*stateList)->next;
-  //assert state
   if((*p)->state != state)
     panic("Process not in correct state");
 
   return 0;
 }
 
-
-//Only to be called from userinit()
-//Initially places all processes in the table onto the Unused list
-//since each is initially set to unused.
-//Asserts state of each proccess is "UNUSED"
-//Does not assert the lock is held since it cannot be in userinit()
+// Only to be called from userinit()
+// Places all processes in the table onto the Unused list
+// since each is initially set to unused.
+// Asserts state of each proccess is "UNUSED"
+// efficiency: O(|ptable|)
 static void
 initUnused(void)
 {
@@ -128,13 +131,15 @@ initUnused(void)
   }
 }
 
-//Adds to end of statelist
-static int
+// Adds to end of statelist
+// No return code as append cannot fail
+// efficiency: O(n)
+static void
 appendToStateList(struct proc** stateList, struct proc* p, enum procstate state)
 {
-  //lock-held assert
+  //Assert lock is held
   if(!holding(&ptable.lock))
-    panic("Not holding lock when accessing state list");
+    panic("Not holding lock when accessing state list (append)");
 
   if(!*stateList){
     *stateList = p;
@@ -146,25 +151,39 @@ appendToStateList(struct proc** stateList, struct proc* p, enum procstate state)
   }
   p->state = state;
   p->next = 0;
-
-  return 0;
 }
 
-//Adds to head of state list
-static int
+// Adds to head of state list
+// No return code as prepend cannot fail
+// efficiency: O(1)
+static void
 prependToStateList(struct proc** stateList, struct proc* p, enum procstate state)
 {
   //lock-held assert
   if(!holding(&ptable.lock))
-    panic("Not holding lock when accessing state list");
+    panic("Not holding lock when accessing state list (prepend)");
 
   p->next = *stateList;
   *stateList = p;
   p->state = state;
-
-  return 0;
 }
 
+/*
+//untested for now.
+static int
+moveFromToStateList(struct proc **fromList, struct proc **toList, struct proc *p, enum procstate fromState, enum procstate toState)
+{
+  //removeFrom.. asserts state is correct
+  if(removeFromStateList(fromList, p, fromState) < 0){
+    cprintf("Failed to remove process: %s from statelist: %d", p->name, fromState); 
+    panic("Failed to remove from statelist");
+  } 
+  else {
+    appendToStateList(toList, p, toState); 
+  }
+  return 0;
+}
+*/
 #endif
 
 void
@@ -292,11 +311,14 @@ userinit(void)
   p->uid = INITUID; 
   p->gid = INITGID;
   p->start_ticks = ticks; 
-  #ifdef CS333_P3P4
+  #ifndef CS333_P3P4
   p->state = RUNNABLE;
   #else
-  removeFromStateList(&ptable.pLists.embryo, p, EMBRYO); //remove from embryo list
+  //Move a process from EMBRYO->RUNNABLE
+  acquire(&ptable.lock);
+  removeFromStateList(&ptable.pLists.embryo, p, EMBRYO);
   appendToStateList(&ptable.pLists.ready, p, RUNNABLE);
+  release(&ptable.lock);
   checkProcs("calling from userinit()");
   #endif
 }
@@ -368,12 +390,9 @@ fork(void)
   #else
   //Move np from EMBRYO->RUNNABLE
   acquire(&ptable.lock);
-  checkProcs(" calling from fork() 1");
-  cprintf("In fork, removing");
   removeFromStateList(&ptable.pLists.embryo, np, EMBRYO);
-  cprintf("In fork, adding");
   appendToStateList(&ptable.pLists.ready, np, RUNNABLE);
-  checkProcs(" calling from fork() 2");
+  //checkProcs("calling from fork()"); <-- put back once lists are done
   release(&ptable.lock);
   #endif
   return pid;
@@ -621,17 +640,19 @@ scheduler(void)
     idle = 1;  // assume idle unless we schedule a process
 
     acquire(&ptable.lock);
+    if(popHeadFromStateList(&ptable.pLists.ready, &p, RUNNABLE) == 0){
+/*    
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
-      
+*/    
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
       idle = 0;  // not idle this timeslice
       proc = p;
       switchuvm(p);
-      p->state = RUNNING;               // <-- Need to add to running state when ready
+      p->state = RUNNING;               // <-- NOT READY: Need to add to running state when ready
       //start_ticks before contx swtch
       p->cpu_ticks_in = ticks;
       swtch(&cpu->scheduler, proc->context);
@@ -702,8 +723,11 @@ void
 yield(void)
 {
   acquire(&ptable.lock);  //DOC: yieldlock
+  #ifndef CS333_P3P4
   proc->state = RUNNABLE;
-//  appendToStateList(&ptable.pLists.ready, proc, RUNNABLE); 
+  #else
+  appendToStateList(&ptable.pLists.ready, proc, RUNNABLE); 
+  #endif
   sched();
   release(&ptable.lock);
 }
@@ -786,7 +810,7 @@ wakeup1(void *chan)
 
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     if(p->state == SLEEPING && p->chan == chan)
-      p->state = RUNNABLE;
+      appendToStateList(&ptable.pLists.ready, p, RUNNABLE);//p->state = RUNNABLE;
 
 }
 #endif
@@ -835,7 +859,8 @@ kill(int pid)
       p->killed = 1;
       // Wake process from sleep if necessary.
       if(p->state == SLEEPING)
-        p->state = RUNNABLE;
+        appendToStateList(&ptable.pLists.ready, p, RUNNABLE); //p->state = RUNNABLE;
+
       release(&ptable.lock);
       return 0;
     }
