@@ -57,6 +57,10 @@ checkProcs(char *s);
 
 #ifdef CS333_P3P4
 
+//Note: an optimization to the lists about children would be a function
+// "getnextchild()" which updates the given pointer, and returns the child through refference
+// kind of like a generator?
+
 // ------ exit(), kill(), wait() helper functions -------
 // Traverse given staetList passing children of parent to initproc
 // used by exit()
@@ -79,7 +83,7 @@ abandonChildren(struct proc* stateList, struct proc* parent)
     }
     p = p->next;
   }
-} 
+}
 
 // Looks for process with given pid in the given stateList
 // on success returns 0 and p now refferencing the process with pid
@@ -88,7 +92,7 @@ abandonChildren(struct proc* stateList, struct proc* parent)
 static int
 getProcess(struct proc* stateList, struct proc** p, int pid)
 {
-  struct proc * curr = stateList;
+  struct proc *curr = stateList;
 
   while(curr){
     if(curr->pid == pid){
@@ -106,6 +110,7 @@ getProcess(struct proc* stateList, struct proc** p, int pid)
 // Looks for a process with given pid in the statelists: ready, running, sleeping, and zombie
 // on success returns 0 on success with p now refferencing the process
 // on failure returns -1
+// used by used by kill()
 static int 
 findProcess(struct proc** p, int pid)
 { 
@@ -130,6 +135,47 @@ findProcess(struct proc** p, int pid)
  
   return rc;
 }
+
+// Looks for children in given statelist
+// on success returns 1
+// on failure return 0
+// note: These are opposite return codes to the usuall 0 == success, -int = failure!
+static int
+findChild(struct proc* stateList, struct proc* parent)
+{
+  struct proc *curr = stateList;
+  
+  while(curr){
+    if(curr->parent == parent){
+      return 1;
+    }
+    curr = curr->next;
+  } 
+  return 0;
+}
+
+// Looks for children in ready, sleeping, and running state lists
+// on success returns 1
+// on failure return 0
+// note: These are opposite return codes to the usuall 0 == success, -int = failure!
+static int
+hasChildren(struct proc* parent)
+{
+  int rc = 0;
+
+  if(findChild(ptable.pLists.ready, parent)){
+    rc = 1;
+  }
+  else if(findChild(ptable.pLists.running, parent)){
+    rc = 1;
+  }
+  else if(findChild(ptable.pLists.sleep, parent)){
+    rc = 1;
+  }
+
+  return rc;
+}
+
 // ------ statelist transition helpers -----
 // Removes the given process from the state list
 // Returns 0 if the process was in the correct state and removed form the list
@@ -565,11 +611,10 @@ exit(void)
     }
   }
 */
-  // Jump into the scheduler, never to return.
   // move proc RUNNING -> ZOMBIE
   removeFromStateList(&ptable.pLists.running, proc, RUNNING);
   prependToStateList(&ptable.pLists.zombie, proc, ZOMBIE);
-//  proc->state = ZOMBIE;
+  // Jump into the scheduler, never to return.
   sched();
   panic("zombie exit");
 }
@@ -626,9 +671,34 @@ wait(void)
   int havekids, pid;
 
   acquire(&ptable.lock);
+
   for(;;){
     // Scan through table looking for zombie children.
-    havekids = 0;
+    // set flag accoridingly
+    havekids = hasChildren(proc);
+   
+    //treat zombie list differently
+    p = ptable.pLists.zombie;
+    while(p){
+      if(p->parent == proc){ 
+        // Found one.
+        pid = p->pid;
+        kfree(p->kstack);
+        p->kstack = 0;
+        freevm(p->pgdir);
+        // move p ZOMIE->UNUSED
+        removeFromStateList(&ptable.pLists.zombie, p, ZOMBIE);
+        prependToStateList(&ptable.pLists.free, p, UNUSED); 
+        p->pid = 0;
+        p->parent = 0;
+        p->name[0] = 0;
+        p->killed = 0;
+        release(&ptable.lock);
+        return pid;
+      }
+      p = p->next;
+    }
+/*
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->parent != proc)
         continue;
@@ -651,7 +721,7 @@ wait(void)
         return pid;
       }
     }
-
+*/
     // No point waiting if we don't have any children.
     if(!havekids || proc->killed){
       release(&ptable.lock);
