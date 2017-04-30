@@ -8,6 +8,7 @@
 #include "spinlock.h"
 #include "uproc.h"
 
+#define DEBUG
 #define NULL 0
 //Will use conditional compilation for all P3/P4...
 #ifdef CS333_P3P4
@@ -56,6 +57,80 @@ checkProcs(char *s);
 
 #ifdef CS333_P3P4
 
+// ------ exit(), kill(), wait() helper functions -------
+// Traverse given staetList passing children of parent to initproc
+// used by exit()
+// efficiency: O(n)
+static void
+abandonChildren(struct proc* stateList, struct proc* parent)
+{
+  //Assert lock is held, and list is non-empty
+  if(!holding(&ptable.lock))
+    panic("Not holding lock when accessing state list (remove)");
+  
+  //for clarity
+  struct proc* p = stateList; 
+
+  while(p){
+    if(p->parent == parent){
+      p->parent = initproc;
+      if(p->state == ZOMBIE)
+        wakeup1(initproc);
+    }
+    p = p->next;
+  }
+} 
+
+// Looks for process with given pid in the given stateList
+// on success returns 0 and p now refferencing the process with pid
+// on failure returns 0
+// efficiency: O(n)
+static int
+getProcess(struct proc* stateList, struct proc** p, int pid)
+{
+  struct proc * curr = stateList;
+
+  while(curr){
+    if(curr->pid == pid){
+      //p will point to the process with pid on return
+      *p = curr; 
+      return 0;
+    } 
+    curr = curr->next;
+  } 
+
+  //failed to find, return failure
+  return -1;
+}
+
+// Looks for a process with given pid in the statelists: ready, running, sleeping, and zombie
+// on success returns 0 on success with p now refferencing the process
+// on failure returns -1
+static int 
+findProcess(struct proc** p, int pid)
+{ 
+  //Assert lock is held, and list is non-empty
+  if(!holding(&ptable.lock))
+    panic("Not holding lock when accessing state list (remove)");
+
+  int rc = -1;
+
+  if(getProcess(ptable.pLists.ready, p, pid) == 0){
+    rc = 0;
+  }
+  else if(getProcess(ptable.pLists.running, p, pid) == 0){
+    rc = 0;
+  }
+  else if(getProcess(ptable.pLists.sleep, p, pid) == 0){
+    rc = 0;
+  }
+  else if(getProcess(ptable.pLists.zombie, p, pid) == 0){
+    rc = 0;
+  }
+ 
+  return rc;
+}
+// ------ statelist transition helpers -----
 // Removes the given process from the state list
 // Returns 0 if the process was in the correct state and removed form the list
 // -1 if the process was not found
@@ -150,6 +225,9 @@ appendToStateList(struct proc** stateList, struct proc* p, enum procstate state)
   }
   p->state = state;
   p->next = 0;
+  #ifdef DEBUG
+  checkProcs("Calling from append to statelist");
+  #endif
 }
 
 // Adds to head of state list
@@ -165,6 +243,9 @@ prependToStateList(struct proc** stateList, struct proc* p, enum procstate state
   p->next = *stateList;
   *stateList = p;
   p->state = state;
+  #ifdef DEBUG
+  checkProcs("Calling from append to statelist");
+  #endif
 }
 
 /*
@@ -354,7 +435,12 @@ fork(void)
   if((np->pgdir = copyuvm(proc->pgdir, proc->sz)) == 0){
     kfree(np->kstack);
     np->kstack = 0;
+    #ifndef CS333_P3P4 
     np->state = UNUSED;
+    #else
+    removeFromStateList(&ptable.pLists.embryo, np, EMBRYO);
+    prependToStateList(&ptable.pLists.free, np, UNUSED);
+    #endif
     return -1;
   }
   np->sz = proc->sz;
@@ -441,7 +527,7 @@ exit(void)
 void
 exit(void)
 {
-  struct proc *p;
+  //struct proc *p;
   int fd;
 
   if(proc == initproc)
@@ -466,6 +552,11 @@ exit(void)
   wakeup1(proc->parent);
 
   // Pass abandoned children to init.
+  abandonChildren(ptable.pLists.ready, proc);
+  abandonChildren(ptable.pLists.running, proc);
+  abandonChildren(ptable.pLists.sleep, proc);
+  abandonChildren(ptable.pLists.zombie, proc);
+/*
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->parent == proc){
       p->parent = initproc;
@@ -473,8 +564,9 @@ exit(void)
         wakeup1(initproc);
     }
   }
-
+*/
   // Jump into the scheduler, never to return.
+  // move proc RUNNING -> ZOMBIE
   removeFromStateList(&ptable.pLists.running, proc, RUNNING);
   prependToStateList(&ptable.pLists.zombie, proc, ZOMBIE);
 //  proc->state = ZOMBIE;
@@ -883,8 +975,21 @@ int
 kill(int pid)
 {
   struct proc *p;
+  int rc = -1;  //assume failure
 
   acquire(&ptable.lock);
+
+  //use helper function to search ready, running, sleeping, and zombie lists
+  if(findProcess(&p, pid) == 0){
+    rc = 0;
+    p->killed = 1;
+    if(p->state == SLEEPING){
+      //move p SLEEPING-> RUNNABLE 
+      removeFromStateList(&ptable.pLists.sleep, p, SLEEPING);
+      appendToStateList(&ptable.pLists.ready, p, RUNNABLE);
+    }
+  }
+/*
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->pid == pid){
       p->killed = 1;
@@ -899,8 +1004,10 @@ kill(int pid)
       return 0;
     }
   }
+ else release lock and return -1
+*/
   release(&ptable.lock);
-  return -1;
+  return rc;
 }
 #endif
 
