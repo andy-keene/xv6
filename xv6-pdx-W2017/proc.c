@@ -60,7 +60,7 @@ checkProcs(char *s);
 // Returns 0 if the process was in the correct state and removed form the list
 // -1 if the process was not found
 // efficiency: O(n)
-static int
+static void
 removeFromStateList(struct proc** stateList, struct proc* p, enum procstate state)
 {
   //Assert lock is held, and list is non-empty
@@ -68,13 +68,11 @@ removeFromStateList(struct proc** stateList, struct proc* p, enum procstate stat
     panic("Not holding lock when accessing state list (remove)");
   if(p->state != state)
     panic("Process has incorrect state");
-//  if(!(*stateList))
-//    return -1;
 
   if(*stateList == p){
     *stateList = (*stateList)->next;
     p->next = 0;
-    return 0;
+    return;
   }  
   else if(*stateList){
     struct proc *curr = *stateList;
@@ -82,14 +80,13 @@ removeFromStateList(struct proc** stateList, struct proc* p, enum procstate stat
       if(curr->next == p){
         curr->next = curr->next->next;
         p->next = 0;
-        return 0;
+        return;
       }
       curr = curr->next;
      }
   }
   cprintf("Process: %s not found on statelist: %d\n", p->name, state);
   panic("Process not found");
-  return -1;
 }
 
 // Asserts lock is held and proc * p is in "state"
@@ -725,8 +722,9 @@ yield(void)
   proc->state = RUNNABLE;
   #else
   // move proc RUNNING->RUNNABLE
-  if(removeFromStateList(&ptable.pLists.running, proc, RUNNING) < 0)
-    panic("Process not found on RUNNING list");
+//  if(removeFromStateList(&ptable.pLists.running, proc, RUNNING) < 0)
+//    panic("Process not found on RUNNING list");
+  removeFromStateList(&ptable.pLists.running, proc, RUNNING);
   appendToStateList(&ptable.pLists.ready, proc, RUNNABLE); 
   #endif
   sched();
@@ -781,8 +779,9 @@ sleep(void *chan, struct spinlock *lk)
   proc->state = SLEEPING;
   #else
   // move proc RUNNING -> SLEEPING
-  if(removeFromStateList(&ptable.pLists.running, proc, RUNNING) < 0)
-    panic("Process not found on RUNNING list (sleep)");
+//  if(removeFromStateList(&ptable.pLists.running, proc, RUNNING) < 0)
+//    panic("Process not found on RUNNING list (sleep)");
+  removeFromStateList(&ptable.pLists.running, proc, RUNNING);
   prependToStateList(&ptable.pLists.sleep, proc, SLEEPING);
   #endif
   sched();
@@ -891,8 +890,9 @@ kill(int pid)
       p->killed = 1;
       // Wake process from sleep if necessary.
       if(p->state == SLEEPING){
-        if(removeFromStateList(&ptable.pLists.sleep, p, SLEEPING) < 0)
-          panic("Process not found on RUNNING list");
+      //  if(removeFromStateList(&ptable.pLists.sleep, p, SLEEPING) < 0)
+        //  panic("Process not found on RUNNING list");
+        removeFromStateList(&ptable.pLists.sleep, p, SLEEPING);
         appendToStateList(&ptable.pLists.ready, p, RUNNABLE); //p->state = RUNNABLE;
       }
       release(&ptable.lock);
@@ -959,6 +959,15 @@ printList(struct proc ** stateList)
 void
 procdump(void)
 {
+
+  struct proc **stateList;
+  enum procstate currState = UNUSED;
+  cprintf("**testing**\n");
+  for(stateList = &ptable.pLists.free; stateList <= &ptable.pLists.zombie; stateList++){
+    cprintf("StateList: %s", states[currState]);
+    printList(stateList);
+    currState++;
+  }
   //test for watching processes
   cprintf("UNUSED");
   printList(&ptable.pLists.free);
