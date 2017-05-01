@@ -1,7 +1,7 @@
 #include "types.h"
 #include "user.h"
 #include "uproc.h"
-
+#include "param.h" //for use of NPROC
 const uint TPS = 100;
 
 static void
@@ -63,8 +63,7 @@ testget(void)
   sleep(2*TPS);
 }
 
-int
-main(int argc, char*argv[])
+void p2tests(void)
 {
   int length = 5;
   uint guid1 = 30;
@@ -102,5 +101,102 @@ main(int argc, char*argv[])
 
   printf(1, "**Fork tests**\n");
   fork_test(guid1, guid2);
+}
+
+//test free and zombie lists
+void free_zombie_tests(void)
+{
+  int children[NPROC];
+  int pid, num_child = 0;
+  printf(2, "(Parent) About to begin creating children...\n");
+  sleep(2*TPS);
+
+  //keep forking until fork() fails.
+  while( (pid = fork()) != -1){
+
+    if(pid == 0){ 
+      while(1)
+        ; //spin so the parent can reap as it wishes.
+    }
+    children[num_child++] = pid; //store in num_child the pid, increment after
+  }
+  
+  //Now fork() has failed so no more processes can be creates
+  printf(2, "(Parent) Created %d children, going to sleep for a hot sec.\n", num_child);
+  sleep(5*TPS);
+
+  //Now lets reap the children! in reverse order. (decrement num_child to match max index)
+  for(num_child -= 1 ; num_child >= 0; num_child--){
+    //mark for death, then wait to reap the child.
+    kill(children[num_child]);
+    while(wait() != children[num_child])
+      ; //spin waiting to reap child.
+//    printf(2, "Reaped [%d] child with PID of %d\n", num_child, children[num_child]);
+  }
+  printf(2, "(Parent) Reaping complete...\n");
+  sleep(5*TPS);
+}
+
+void sleep_test(void)
+{
+  
+/*
+  printf(2, "PID: %d going to sleep\n", getpid());
+  sleep();
+  printf(2, "PID: %d exiting\n", getpid());
+*/
+
+  int pid, num = 4;
+  printf(2, "(Parent) PID: %d\n", getpid());
+
+  while(num > 0){
+
+    pid = fork();
+    if(pid == 0){
+      sleep(5*TPS); //each child will sleep for 6 seconds
+      printf(2, "Child %d exiting\n", getpid());
+      exit();
+    }
+    num -= 1;
+  }
+  printf(2, "(Parent) going to sleep");
+  sleep(12*TPS);
+  while(wait() != -1)
+    ; 
+  printf(2, "(Parent) exiting");
+}
+
+void round_robin(void)
+{
+  int pid, num = 5;
+
+  while(num > 0){
+
+    pid = fork();
+    if(pid == 0){
+      while(1)
+        ;
+    }
+    num -= 1;
+  }
+  sleep(10*TPS);
+  printf(2, "(Parent) Exiting round_robin()");
+}
+
+
+void p3tests(void)
+{
+  sleep_test();
+//  round_robin();
+//  free_zombie_tests();
+
+}
+
+int
+main(int argc, char*argv[])
+{
+  p3tests();
+//  p2tests();
+
   exit();
 }

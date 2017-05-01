@@ -8,8 +8,9 @@
 #include "spinlock.h"
 #include "uproc.h"
 
-#define DEBUG
-#define NULL 0
+#define DEBUG  //turns on checkProcs to prove list invariant
+#define NULL 0 //only used in #DEBUG
+
 //Will use conditional compilation for all P3/P4...
 #ifdef CS333_P3P4
 struct StateLists {
@@ -41,9 +42,10 @@ static void wakeup1(void *chan);
 #ifdef CS333_P3P4
 void
 printList(struct proc ** stateList);
-
+#ifdef DEBUG
 static void
 checkProcs(char *s);
+#endif
 #endif
 
 
@@ -293,26 +295,6 @@ prependToStateList(struct proc** stateList, struct proc* p, enum procstate state
   checkProcs("Calling from append to statelist");
   #endif
 }
-
-/*
-// Removes process p fromList->toList
-// asserts p is in given state (in remove), removes it from the list, and prepends it to the given toList
-// panics if p has incorrect state, or is not found
-// efficiency: O(n)
-static int
-moveFromToStateList(struct proc **fromList, struct proc **toList, struct proc *p, enum procstate fromState, enum procstate toState)
-{
-  //removeFrom.. asserts state is correct
-  if(removeFromStateList(fromList, p, fromState) < 0){
-    cprintf("Failed to remove process: %s from statelist: %d", p->name, fromState); 
-    panic("Failed to remove from statelist");
-  } 
-  else {
-    prependToStateList(toList, p, toState); 
-  }
-  return 0;
-}
-*/
 #endif
 
 void
@@ -435,12 +417,11 @@ userinit(void)
   #ifndef CS333_P3P4
   p->state = RUNNABLE;
   #else
-  //Move a process from EMBRYO->RUNNABLE
+  //Move initproc from EMBRYO->RUNNABLE
   acquire(&ptable.lock);
   removeFromStateList(&ptable.pLists.embryo, p, EMBRYO);
   appendToStateList(&ptable.pLists.ready, p, RUNNABLE);
   release(&ptable.lock);
-  checkProcs("calling from userinit()");
   #endif
 }
 
@@ -1101,32 +1082,6 @@ printnum(const uint num)
 
 }
 
-//testing print lists
-void
-printList(struct proc ** stateList)
-{
-  struct proc *p = *stateList;
-  int i = 0;
-  char *state; 
-  uint curr_ticks = ticks;
-
-  cprintf("\nSpot\tPID\tName\tUID\tGID\tPPID\tELapsed\tCPU\tState\tSize\n");
-  while(p)
-  {
-    if(p->state >= 0 && p->state < NELEM(states) && states[p->state])
-      state = states[p->state];
-    else
-      state = "???";
-    cprintf("%d\t%d\t%s\t%d\t%d\t%d\t", i, p->pid, p->name, p->uid, p->gid, (p->parent ? p->parent->pid : p->pid) );
-    printnum(curr_ticks - p->start_ticks); 
-    printnum(p->cpu_ticks_total);
-    cprintf("%s\t%d\n", state, p->sz);
-    p = p->next;
-    i++;
-  }
-
-
-}
 //PAGEBREAK: 36
 // Print a process listing to console.  For debugging.
 // Runs when user types ^P on console.
@@ -1136,41 +1091,14 @@ printList(struct proc ** stateList)
 void
 procdump(void)
 {
-
-  struct proc **stateList;
-  enum procstate currState = UNUSED;
-  cprintf("**testing**\n");
-  for(stateList = &ptable.pLists.free; stateList <= &ptable.pLists.zombie; stateList++){
-    cprintf("StateList: %s", states[currState]);
-    printList(stateList);
-    currState++;
-  }
-  //test for watching processes
-  cprintf("UNUSED");
-  printList(&ptable.pLists.free);
-  cprintf("\n");
-  cprintf("EMBRYO");
-  printList(&ptable.pLists.embryo);
-  cprintf("\n");
-  cprintf("READY");
-  printList(&ptable.pLists.ready);
-  cprintf("\n");
-  cprintf("RUNNING");
-  printList(&ptable.pLists.running);
-  cprintf("\n");
-  cprintf("ZOMBIE");
-  printList(&ptable.pLists.zombie);
-  cprintf("\n");
-  cprintf("SLEEPING");
-  printList(&ptable.pLists.sleep);
-  cprintf("\n");
-
-
   int i;
   struct proc *p;
   char *state;
   uint pc[10];
   uint curr_ticks = ticks;
+  #ifdef DEBUG
+  cprintf("\nNPROCS = %d\n", NPROC); //to be used for P3 testing
+  #endif
   cprintf("\nPID\tName\tUID\tGID\tPPID\tELapsed\tCPU\tState\tSize\tPCs\n");
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->state == UNUSED)
@@ -1228,47 +1156,49 @@ getprocs(uint max, struct uproc *table)
 
 //Given debug code
 #ifdef CS333_P3P4
+#ifdef DEBUG
 static int
 findProc(struct proc *p)
 {
   struct proc *np;
-
+  int count = 0;
   np = ptable.pLists.free;
   while (np != NULL) {
-    if (np == p) return 1;
+    if (np == p) count += 1;
     np = np->next;
   }
   np = ptable.pLists.embryo;
   while (np != NULL) {
-    if (np == p) return 1;
+    if (np == p) count += 1;
     np = np->next;
   }
   np = ptable.pLists.running;
   while (np != NULL) {
-    if (np == p) return 1;
+    if (np == p) count += 1;
     np = np->next;
   }
   np = ptable.pLists.sleep;
   while (np != NULL) {
-    if (np == p) return 1;
+    if (np == p) count += 1;
     np = np->next;
   }
   np = ptable.pLists.zombie;
   while (np != NULL) {
-    if (np == p) return 1;
+    if (np == p) count += 1;
     np = np->next;
   }
 
   np = ptable.pLists.ready;
   while (np != NULL) {
-    if (np == p) return 1;
+    if (np == p) count += 1;
     np = np->next;
   }
   
-  return 0; // not found
+  return count; // not found
 }
 
-// argument 's' is a string to print on not found
+// argument 's' is a string to print if
+// a process is not on one and only one list.
 static void
 checkProcs(char *s)
 {
@@ -1280,12 +1210,18 @@ checkProcs(char *s)
   if (!isholding) acquire(&ptable.lock);
   for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
     found = findProc(p);
-    if (found) continue;
-    cprintf("For checkProcs(%s)\n", s);
+    if (found == 1)  //invarient holds. 
+      continue;
+    if (found == 0)
+      cprintf("Process %s (PID: %d) not found on *any* list\n", p->name, p->pid);
+    if (found > 1)
+      cprintf("Process %s (PID: %d) found on %d lists\n", p->name, p->pid, found);
+    cprintf("Checkprocs diagnostic message: (%s)\n", s);
     panic("Process array and lists inconsistent\n");
   }
   if (!isholding) release(&ptable.lock);
 }
+#endif  //end DEBUG 
 
 // For console-R
 // print PID.1 -> PID.2 -> ... for free list
@@ -1359,5 +1295,4 @@ zombielistinfo(void)
 
 }
 
-
-#endif
+#endif //end CS333_P3P4 flag
