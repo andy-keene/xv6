@@ -108,7 +108,7 @@ void free_zombie_tests(void)
 {
   int children[NPROC];
   int pid, num_child = 0;
-  printf(2, "(Parent) About to begin creating children...\n");
+  printf(2, "(Parent, PID: %d) About to begin creating children...\n", getpid());
   sleep(2*TPS);
 
   //keep forking until fork() fails.
@@ -123,15 +123,20 @@ void free_zombie_tests(void)
   
   //Now fork() has failed so no more processes can be creates
   printf(2, "(Parent) Created %d children, going to sleep for a hot sec.\n", num_child);
-  sleep(5*TPS);
+  sleep(3*TPS);
 
   //Now lets reap the children! in reverse order. (decrement num_child to match max index)
   for(num_child -= 1 ; num_child >= 0; num_child--){
     //mark for death, then wait to reap the child.
     kill(children[num_child]);
+    printf(2, "Marked [%d] child with PID of %d for death\n", num_child, children[num_child]);
+    sleep(2*TPS);
+
     while(wait() != children[num_child])
       ; //spin waiting to reap child.
-//    printf(2, "Reaped [%d] child with PID of %d\n", num_child, children[num_child]);
+
+    printf(2, "Reaped [%d] child with PID of %d\n", num_child, children[num_child]);
+    sleep(2*TPS);
   }
   printf(2, "(Parent) Reaping complete...\n");
   sleep(5*TPS);
@@ -186,9 +191,9 @@ void round_robin(void)
 
 void p3tests(void)
 {
-  sleep_test();
+//  sleep_test();
 //  round_robin();
-//  free_zombie_tests();
+  free_zombie_tests();
 
 }
 
