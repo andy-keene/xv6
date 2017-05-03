@@ -45,8 +45,8 @@ printList(struct proc ** stateList);
 #ifdef DEBUG
 static void
 checkProcs(char *s);
-#endif
-#endif
+#endif //end DEBUG flag
+#endif //end P3P4 flag
 
 
 //Helper functions for P3
@@ -59,7 +59,7 @@ checkProcs(char *s);
 
 #ifdef CS333_P3P4
 
-//Note: an optimization to the lists about children would be a function
+// Note: an optimization to the lists handling child procs would be a function
 // "getnextchild()" which updates the given pointer, and returns the child through refference
 // kind of like a generator?
 
@@ -141,6 +141,7 @@ findProcess(struct proc** p, int pid)
 // Looks for children in given statelist
 // on success returns 1
 // on failure return 0
+// efficiency: O(n)
 // note: These are opposite return codes to the usuall 0 == success, -int = failure!
 static int
 findChild(struct proc* stateList, struct proc* parent)
@@ -274,6 +275,7 @@ appendToStateList(struct proc** stateList, struct proc* p, enum procstate state)
   p->state = state;
   p->next = 0;
   #ifdef DEBUG
+  //demonstrate list invariant is held
   checkProcs("Calling from append to statelist");
   #endif
 }
@@ -292,7 +294,8 @@ prependToStateList(struct proc** stateList, struct proc* p, enum procstate state
   *stateList = p;
   p->state = state;
   #ifdef DEBUG
-  checkProcs("Calling from append to statelist");
+  //demonstrate list invariant is held
+  checkProcs("Calling from append to statelist"); 
   #endif
 }
 #endif
@@ -583,18 +586,10 @@ exit(void)
   abandonChildren(ptable.pLists.running, proc);
   abandonChildren(ptable.pLists.sleep, proc);
   abandonChildren(ptable.pLists.zombie, proc);
-/*
-  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-    if(p->parent == proc){
-      p->parent = initproc;
-      if(p->state == ZOMBIE)
-        wakeup1(initproc);
-    }
-  }
-*/
   // move proc RUNNING -> ZOMBIE
   removeFromStateList(&ptable.pLists.running, proc, RUNNING);
   prependToStateList(&ptable.pLists.zombie, proc, ZOMBIE);
+
   // Jump into the scheduler, never to return.
   sched();
   panic("zombie exit");
@@ -679,30 +674,7 @@ wait(void)
       }
       p = p->next;
     }
-/*
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->parent != proc)
-        continue;
-      havekids = 1;
-      if(p->state == ZOMBIE){
-        // Found one.
-        pid = p->pid;
-        kfree(p->kstack);
-        p->kstack = 0;
-        freevm(p->pgdir);
-//        p->state = UNUSED;        
-        // move p ZOMIE->UNUSED
-        removeFromStateList(&ptable.pLists.zombie, p, ZOMBIE);
-        prependToStateList(&ptable.pLists.free, p, UNUSED); 
-        p->pid = 0;
-        p->parent = 0;
-        p->name[0] = 0;
-        p->killed = 0;
-        release(&ptable.lock);
-        return pid;
-      }
-    }
-*/
+
     // No point waiting if we don't have any children.
     if(!havekids || proc->killed){
       release(&ptable.lock);
@@ -781,6 +753,7 @@ scheduler(void)
     idle = 1;  // assume idle unless we schedule a process
 
     acquire(&ptable.lock);
+    //try to move p from RUNNABLE -> RUNNING; wait if no runnable proc is found
     if(popHeadFromStateList(&ptable.pLists.ready, &p, RUNNABLE) == 0){
       prependToStateList(&ptable.pLists.running, p, RUNNING);      
       
@@ -790,7 +763,6 @@ scheduler(void)
       idle = 0;  // not idle this timeslice
       proc = p;
       switchuvm(p);
-     // p->state = RUNNING;               // <-- NOT READY: Need to add to running state when ready
       //start_ticks before contx swtch
       p->cpu_ticks_in = ticks;
       swtch(&cpu->scheduler, proc->context);
@@ -865,8 +837,6 @@ yield(void)
   proc->state = RUNNABLE;
   #else
   // move proc RUNNING->RUNNABLE
-//  if(removeFromStateList(&ptable.pLists.running, proc, RUNNING) < 0)
-//    panic("Process not found on RUNNING list");
   removeFromStateList(&ptable.pLists.running, proc, RUNNING);
   appendToStateList(&ptable.pLists.ready, proc, RUNNABLE); 
   #endif
@@ -922,8 +892,6 @@ sleep(void *chan, struct spinlock *lk)
   proc->state = SLEEPING;
   #else
   // move proc RUNNING -> SLEEPING
-//  if(removeFromStateList(&ptable.pLists.running, proc, RUNNING) < 0)
-//    panic("Process not found on RUNNING list (sleep)");
   removeFromStateList(&ptable.pLists.running, proc, RUNNING);
   prependToStateList(&ptable.pLists.sleep, proc, SLEEPING);
   #endif
@@ -975,16 +943,6 @@ wakeup1(void *chan)
       curr = curr->next;
     }
   }
-
-/*
-  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
-    if(p->state == SLEEPING && p->chan == chan){
-      //move p SLEEPING -> RUNNABLE
-      if(removeFromStateList(&ptable.pLists.sleep, p, SLEEPING) < 0)
-        panic("Process not found on sleeping list");
-      appendToStateList(&ptable.pLists.ready, p, RUNNABLE);
-    }
-*/
 
 }
 #endif
@@ -1040,23 +998,7 @@ kill(int pid)
       appendToStateList(&ptable.pLists.ready, p, RUNNABLE);
     }
   }
-/*
-  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-    if(p->pid == pid){
-      p->killed = 1;
-      // Wake process from sleep if necessary.
-      if(p->state == SLEEPING){
-      //  if(removeFromStateList(&ptable.pLists.sleep, p, SLEEPING) < 0)
-        //  panic("Process not found on RUNNING list");
-        removeFromStateList(&ptable.pLists.sleep, p, SLEEPING);
-        appendToStateList(&ptable.pLists.ready, p, RUNNABLE); //p->state = RUNNABLE;
-      }
-      release(&ptable.lock);
-      return 0;
-    }
-  }
- else release lock and return -1
-*/
+  
   release(&ptable.lock);
   return rc;
 }
@@ -1154,9 +1096,11 @@ getprocs(uint max, struct uproc *table)
   return i;
 }
 
-//Given debug code
 #ifdef CS333_P3P4
 #ifdef DEBUG
+
+// Given debug code: modified to return n
+// where n is the number of lists process p is on
 static int
 findProc(struct proc *p)
 {
@@ -1199,6 +1143,7 @@ findProc(struct proc *p)
 
 // argument 's' is a string to print if
 // a process is not on one and only one list.
+// asserts list invariant
 static void
 checkProcs(char *s)
 {
