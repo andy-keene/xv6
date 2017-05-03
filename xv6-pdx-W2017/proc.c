@@ -1228,6 +1228,7 @@ checkProcs(char *s)
 void
 readylistinfo(void)
 {
+  acquire(&ptable.lock);
   struct proc *curr = ptable.pLists.ready;
 
   cprintf("Ready List Processes:\n");
@@ -1237,6 +1238,7 @@ readylistinfo(void)
       cprintf(" -> ");
     curr = curr->next;
   }
+  release(&ptable.lock);
   //terminate listing
   cprintf("\n");
 }
@@ -1245,7 +1247,8 @@ readylistinfo(void)
 // prints number of free processes available 
 void
 freelistinfo(void)
-{
+{ 
+  acquire(&ptable.lock);
   struct proc *curr = ptable.pLists.free;
   int num = 0;
 
@@ -1253,7 +1256,7 @@ freelistinfo(void)
     num += 1;
     curr = curr->next;
   }
-
+  release(&ptable.lock);
   cprintf("Free List Size: %d processes\n", num);
 }
 
@@ -1262,6 +1265,7 @@ freelistinfo(void)
 void
 sleepinglistinfo(void)
 {
+  acquire(&ptable.lock);
   struct proc *curr = ptable.pLists.sleep;
 
   cprintf("Sleeping List Processes:\n");
@@ -1271,6 +1275,7 @@ sleepinglistinfo(void)
       cprintf(" -> ");
     curr = curr->next;
   }
+  release(&ptable.lock);
   //terminate listing
   cprintf("\n");
 }
@@ -1280,6 +1285,7 @@ sleepinglistinfo(void)
 void
 zombielistinfo(void)
 {
+  acquire(&ptable.lock);
   struct proc *curr = ptable.pLists.zombie;
 
   cprintf("Zombie List Processes:\n");
@@ -1290,6 +1296,7 @@ zombielistinfo(void)
       cprintf(" -> ");
     curr = curr->next;
   }
+  release(&ptable.lock);
   //terminate listing
   cprintf("\n");
 
