@@ -144,31 +144,10 @@ void free_zombie_tests(void)
 
 void sleep_test(void)
 {
-  
-/*
-  printf(2, "PID: %d going to sleep\n", getpid());
-  sleep();
-  printf(2, "PID: %d exiting\n", getpid());
-*/
 
-  int pid, num = 4;
-  printf(2, "(Parent) PID: %d\n", getpid());
-
-  while(num > 0){
-
-    pid = fork();
-    if(pid == 0){
-      sleep(5*TPS); //each child will sleep for 6 seconds
-      printf(2, "Child %d exiting\n", getpid());
-      exit();
-    }
-    num -= 1;
-  }
-  printf(2, "(Parent) going to sleep");
-  sleep(12*TPS);
-  while(wait() != -1)
-    ; 
-  printf(2, "(Parent) exiting");
+  printf(2, "Process: %d going to sleep!\n", getpid());
+  sleep(10*TPS);
+  printf(2, "Process: I'm awake, and I'm going to exit\n");
 }
 
 void inf_loops(void)
@@ -185,7 +164,6 @@ void inf_loops(void)
     num -= 1;
   }
 
-  //can't let parent exit, or the children will die :(
   while(1) ;
 
 }
@@ -193,7 +171,7 @@ void inf_loops(void)
 
 void round_robin(void)
 {
-  int pid, num = 5;
+  int pid, num = 20;
 
   while(num > 0){
 
@@ -204,17 +182,18 @@ void round_robin(void)
     }
     num -= 1;
   }
-  sleep(10*TPS);
-  printf(2, "(Parent) Exiting round_robin()");
+  printf(2, "(Parent) Children ready and spinning");
+  while(1) ;
+
 }
 
 
 void p3tests(void)
 {
-    inf_loops();
+//  inf_loops();
 //  sleep_test();
 //  round_robin();
-//  free_zombie_tests();
+   free_zombie_tests();
 
 }
 

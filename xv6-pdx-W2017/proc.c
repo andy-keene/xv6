@@ -122,6 +122,9 @@ findProcess(struct proc** p, int pid)
 
   int rc = -1;
 
+  if(getProcess(ptable.pLists.embryo, p, pid) == 0){
+    rc = 0;
+  }
   if(getProcess(ptable.pLists.ready, p, pid) == 0){
     rc = 0;
   }
@@ -166,6 +169,9 @@ hasChildren(struct proc* parent)
 {
   int rc = 0;
 
+  if(findChild(ptable.pLists.embryo, parent)){
+    rc = 1; //added per emailed instructions
+  }
   if(findChild(ptable.pLists.ready, parent)){
     rc = 1;
   }
@@ -582,6 +588,7 @@ exit(void)
   wakeup1(proc->parent);
 
   // Pass abandoned children to init.
+  abandonChildren(ptable.pLists.embryo, proc);
   abandonChildren(ptable.pLists.ready, proc);
   abandonChildren(ptable.pLists.running, proc);
   abandonChildren(ptable.pLists.sleep, proc);
