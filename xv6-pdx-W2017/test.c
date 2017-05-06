@@ -171,6 +171,26 @@ void sleep_test(void)
   printf(2, "(Parent) exiting");
 }
 
+void inf_loops(void)
+{
+  int pid, num = 5;
+
+  printf(2, "Parent of Infiite Loops: %d\n", getpid());
+  while(num > 0){
+
+    pid = fork();
+    if(pid == 0){
+      while(1) ;
+    }
+    num -= 1;
+  }
+
+  //can't let parent exit, or the children will die :(
+  while(1) ;
+
+}
+
+
 void round_robin(void)
 {
   int pid, num = 5;
@@ -191,9 +211,10 @@ void round_robin(void)
 
 void p3tests(void)
 {
+    inf_loops();
 //  sleep_test();
 //  round_robin();
-  free_zombie_tests();
+//  free_zombie_tests();
 
 }
 
