@@ -71,6 +71,7 @@ struct proc {
   uint start_ticks;            // Time of creation
   uint cpu_ticks_total;        // Total running time of proc in ticks
   uint cpu_ticks_in;           // Tick count when last scheduled
+  struct proc *next;           // Next processes for P3 state lists
 };
 
 // Process memory is laid out contiguously, low addresses first:

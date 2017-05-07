@@ -190,6 +190,10 @@ void
 consoleintr(int (*getc)(void))
 {
   int c, doprocdump = 0;
+  #ifdef CS333_P3P4
+  int dofreelist = 0, doreadylist = 0, 
+      dosleeplist = 0, dozombielist = 0;
+  #endif 
 
   acquire(&cons.lock);
   while((c = getc()) >= 0){
@@ -210,6 +214,21 @@ consoleintr(int (*getc)(void))
         consputc(BACKSPACE);
       }
       break;
+    #ifdef CS333_P3P4
+    //console controls for displaying list information
+    case C('R'):
+      doreadylist = 1; 
+      break;
+    case C('F'):
+      dofreelist = 1; 
+      break;
+    case C('S'):
+      dosleeplist = 1; 
+      break;
+    case C('Z'):
+      dozombielist = 1; 
+      break;
+    #endif
     default:
       if(c != 0 && input.e-input.r < INPUT_BUF){
         c = (c == '\r') ? '\n' : c;
@@ -227,6 +246,20 @@ consoleintr(int (*getc)(void))
   if(doprocdump) {
     procdump();  // now call procdump() wo. cons.lock held
   }
+  #ifdef CS333_P3P4
+  if(doreadylist) {
+    readylistinfo();
+  }
+  if(dofreelist) {
+    freelistinfo();
+  }
+  if(dosleeplist) {
+    sleepinglistinfo();
+  }
+  if(dozombielist) {
+    zombielistinfo();
+  }
+  #endif
 }
 
 int
