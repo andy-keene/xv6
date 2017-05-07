@@ -8,7 +8,7 @@
 #include "spinlock.h"
 #include "uproc.h"
 
-#define DEBUG  //turns on checkProcs to prove list invariant
+// #define DEBUG  //turns on checkProcs to prove list invariant
 #define NULL 0 //only used in #DEBUG
 
 //Will use conditional compilation for all P3/P4...
