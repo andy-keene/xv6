@@ -213,6 +213,10 @@ removeFromStateList(struct proc** stateList, struct proc* p, enum procstate stat
   if(p->state != state)
     panic("Process has incorrect state");
 
+  #ifdef DEBUG
+  checkProcs("Calling from append to statelist"); //demonstrate list invariant is held
+  #endif
+
   if(*stateList == p){
     *stateList = (*stateList)->next;
     p->next = 0;
