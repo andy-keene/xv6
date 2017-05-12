@@ -71,6 +71,8 @@ struct proc {
   uint start_ticks;            // Time of creation
   uint cpu_ticks_total;        // Total running time of proc in ticks
   uint cpu_ticks_in;           // Tick count when last scheduled
+  uint priority;               // Current priority level in MLFQ
+  int budget;                  // Budget to track CPU time in MLFQ
   struct proc *next;           // Next processes for P3 state lists
 };
 

@@ -8,13 +8,17 @@
 #include "spinlock.h"
 #include "uproc.h"
 
-// #define DEBUG  //turns on checkProcs to prove list invariant
-#define NULL 0 //only used in #DEBUG
+#define TPS 100
+// #define DEBUG                   // turns on checkProcs to prove list invariant
+#define NULL 0                     // only used in #DEBUG
+#define MAX 5                      // MAX + 1 defines # of queues in MLFQ
+#define TICKS_TO_PROMOTE 10*TPS    // ticks between prio resets
+#define DEFAULT_BUDGET 3*TPS       // defines alloted CPU time before demotion
 
 //Will use conditional compilation for all P3/P4...
 #ifdef CS333_P3P4
 struct StateLists {
-  struct proc* ready;
+  struct proc* ready[MAX+1];
   struct proc* free;
   struct proc* sleep;
   struct proc* zombie;
@@ -28,6 +32,7 @@ struct {
   struct proc proc[NPROC];
   #ifdef CS333_P3P4
   struct StateLists pLists;
+  uint promoteAtTime;         // where to set at?
   #endif
 } ptable;
 
@@ -125,9 +130,6 @@ findProcess(struct proc** p, int pid)
   if(getProcess(ptable.pLists.embryo, p, pid) == 0){
     rc = 0;
   }
-  if(getProcess(ptable.pLists.ready, p, pid) == 0){
-    rc = 0;
-  }
   else if(getProcess(ptable.pLists.running, p, pid) == 0){
     rc = 0;
   }
@@ -137,7 +139,14 @@ findProcess(struct proc** p, int pid)
   else if(getProcess(ptable.pLists.zombie, p, pid) == 0){
     rc = 0;
   }
- 
+  else {
+    for(int i = 0; i < MAX + 1; i++){
+      if(getProcess(ptable.pLists.ready[i], p, pid) == 0){     // add queu != NULL &&?
+        rc = 0;
+        break;  // break at first queue containing pid
+      }
+    }
+  }
   return rc;
 }
 
@@ -172,14 +181,19 @@ hasChildren(struct proc* parent)
   if(findChild(ptable.pLists.embryo, parent)){
     rc = 1; //added per emailed instructions
   }
-  if(findChild(ptable.pLists.ready, parent)){
-    rc = 1;
-  }
   else if(findChild(ptable.pLists.running, parent)){
     rc = 1;
   }
   else if(findChild(ptable.pLists.sleep, parent)){
     rc = 1;
+  }
+  else { 
+    for(int i = 0; i < MAX + 1; i++){
+      if(findChild(ptable.pLists.ready[i], parent)){
+        rc = 1;
+        break; // break at first queue containing child
+      }
+    }
   }
 
   return rc;
@@ -376,9 +390,13 @@ found:
   sp -= 4;
   *(uint*)sp = (uint)trapret;
 
-  //initialize running time counts
+  //initialize running time counts, and pio/bdgt in P4
   p->cpu_ticks_total = 0;
   p->cpu_ticks_in = 0;
+  #ifdef CS333_P3P4
+  p->priority = 0;                // Q this is fine since this process is not access by anything else, correct?
+  p->budget = DEFAULT_BUDGET;
+  #endif
 
   sp -= sizeof *p->context;
   p->context = (struct context*)sp;
@@ -429,7 +447,7 @@ userinit(void)
   //Move initproc from EMBRYO->RUNNABLE
   acquire(&ptable.lock);
   removeFromStateList(&ptable.pLists.embryo, p, EMBRYO);
-  appendToStateList(&ptable.pLists.ready, p, RUNNABLE);
+  appendToStateList(&ptable.pLists.ready[p->priority], p, RUNNABLE);
   release(&ptable.lock);
   #endif
 }
@@ -507,7 +525,7 @@ fork(void)
   //Move np from EMBRYO->RUNNABLE
   acquire(&ptable.lock);
   removeFromStateList(&ptable.pLists.embryo, np, EMBRYO);
-  appendToStateList(&ptable.pLists.ready, np, RUNNABLE);
+  appendToStateList(&ptable.pLists.ready[np->priority], np, RUNNABLE);
   //checkProcs("calling from fork()"); <-- put back once lists are done
   release(&ptable.lock);
   #endif
@@ -589,10 +607,13 @@ exit(void)
 
   // Pass abandoned children to init.
   abandonChildren(ptable.pLists.embryo, proc);
-  abandonChildren(ptable.pLists.ready, proc);
   abandonChildren(ptable.pLists.running, proc);
   abandonChildren(ptable.pLists.sleep, proc);
   abandonChildren(ptable.pLists.zombie, proc);
+  //for each queue in MLFQ
+  for(int i = 0; i < MAX + 1; i++){
+    abandonChildren(ptable.pLists.ready[i], proc);
+  }
   // move proc RUNNING -> ZOMBIE
   removeFromStateList(&ptable.pLists.running, proc, RUNNING);
   prependToStateList(&ptable.pLists.zombie, proc, ZOMBIE);
@@ -761,7 +782,7 @@ scheduler(void)
 
     acquire(&ptable.lock);
     //try to move p from RUNNABLE -> RUNNING; wait if no runnable proc is found
-    if(popHeadFromStateList(&ptable.pLists.ready, &p, RUNNABLE) == 0){
+    if(popHeadFromStateList(&ptable.pLists.ready[0], &p, RUNNABLE) == 0){
       prependToStateList(&ptable.pLists.running, p, RUNNING);      
       
       // Switch to chosen process.  It is the process's job
@@ -845,7 +866,7 @@ yield(void)
   #else
   // move proc RUNNING->RUNNABLE
   removeFromStateList(&ptable.pLists.running, proc, RUNNING);
-  appendToStateList(&ptable.pLists.ready, proc, RUNNABLE); 
+  appendToStateList(&ptable.pLists.ready[proc->priority], proc, RUNNABLE); 
   #endif
   sched();
   release(&ptable.lock);
@@ -944,7 +965,7 @@ wakeup1(void *chan)
       curr = curr->next;  //skip ahead since we must delete p
       //move p SLEEPING -> RUNNABLE
       removeFromStateList(&ptable.pLists.sleep, p, SLEEPING);
-      appendToStateList(&ptable.pLists.ready, p, RUNNABLE);
+      appendToStateList(&ptable.pLists.ready[p->priority], p, RUNNABLE);
     }
     else{
       curr = curr->next;
@@ -1002,7 +1023,7 @@ kill(int pid)
     if(p->state == SLEEPING){
       //move p SLEEPING-> RUNNABLE 
       removeFromStateList(&ptable.pLists.sleep, p, SLEEPING);
-      appendToStateList(&ptable.pLists.ready, p, RUNNABLE);
+      appendToStateList(&ptable.pLists.ready[p->priority], p, RUNNABLE);
     }
   }
   
@@ -1181,14 +1202,18 @@ void
 readylistinfo(void)
 {
   acquire(&ptable.lock);
-  struct proc *curr = ptable.pLists.ready;
-
   cprintf("Ready List Processes:\n");
-  while(curr){
-    cprintf("%d", curr->pid);
-    if(curr->next)
-      cprintf(" -> ");
-    curr = curr->next;
+
+  for(int i = 0; i < MAX + 1; i++){
+    cprintf("%d: ", i);
+    struct proc *curr = ptable.pLists.ready[i];  
+    while(curr){
+      cprintf("(%d,%d)", curr->pid, curr->budget);
+      if(curr->next)
+        cprintf(" -> ");
+      curr = curr->next;
+    }
+    cprintf("\n");
   }
   release(&ptable.lock);
   //terminate listing
