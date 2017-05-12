@@ -398,7 +398,7 @@ found:
   p->cpu_ticks_total = 0;
   p->cpu_ticks_in = 0;
   #ifdef CS333_P3P4
-  p->priority = 0;                // Q this is fine since this process is not access by anything else, correct?
+  p->priority = 0;                // Q this is fine since this list is not accessed by anything else, correct?
   p->budget = DEFAULT_BUDGET;
   #endif
 
@@ -614,7 +614,7 @@ exit(void)
   abandonChildren(ptable.pLists.running, proc);
   abandonChildren(ptable.pLists.sleep, proc);
   abandonChildren(ptable.pLists.zombie, proc);
-  //for each queue in MLFQ
+  //Abandon children in each queue in MLFQ
   for(int i = 0; i < MAX + 1; i++){
     abandonChildren(ptable.pLists.ready[i], proc);
   }
@@ -842,6 +842,7 @@ void
 sched(void)
 {
   int intena;
+  uint cpu_ticks;
 
   if(!holding(&ptable.lock))
     panic("sched ptable.lock");
@@ -853,7 +854,12 @@ sched(void)
     panic("sched interruptible");
   intena = cpu->intena;
   //add cpu run time before swapping out
-  proc->cpu_ticks_total += ticks - proc->cpu_ticks_in;
+
+  cpu_ticks = ticks - proc->cpu_ticks_in;
+  proc->budget -= cpu_ticks;
+  proc->cpu_ticks_total += cpu_ticks;
+  
+//  proc->cpu_ticks_total += ticks - proc->cpu_ticks_in;
   swtch(&proc->context, cpu->scheduler);
   
   cpu->intena = intena;
