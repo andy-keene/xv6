@@ -9,7 +9,7 @@
 #include "uproc.h"
 
 #define TPS 100
-// #define DEBUG                   // turns on checkProcs to prove list invariant
+#define DEBUG                   // turns on checkProcs to prove list invariant
 #define NULL 0                     // only used in #DEBUG
 #define MAX 5                      // MAX + 1 defines # of queues in MLFQ
 #define TICKS_TO_PROMOTE 10*TPS    // ticks between prio resets
@@ -1139,6 +1139,7 @@ findProc(struct proc *p)
 {
   struct proc *np;
   int count = 0;
+  
   np = ptable.pLists.free;
   while (np != NULL) {
     if (np == p) count += 1;
@@ -1163,14 +1164,14 @@ findProc(struct proc *p)
   while (np != NULL) {
     if (np == p) count += 1;
     np = np->next;
+  } 
+  for(int i = 0; i < MAX + 1; i++){
+    np = ptable.pLists.ready[i];
+    while (np != NULL) {
+      if (np == p) count += 1;
+      np = np->next;
+    }
   }
-
-  np = ptable.pLists.ready;
-  while (np != NULL) {
-    if (np == p) count += 1;
-    np = np->next;
-  }
-  
   return count; // not found
 }
 
