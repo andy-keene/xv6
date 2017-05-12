@@ -26,9 +26,10 @@ main(int argc, char * argv[])
      printf(1, "Failure", ret);
   } 
   else {
-    printf(2, "\nPID\tName\tUID\tGID\tPPID\tELapsed\tCPU\tState\tSize\n");
+    // note: not wrapping print statements in conditional compilation
+    printf(2, "\nPID\tName\tUID\tGID\tPPID\tPrio\tELapsed\tCPU\tState\tSize\n");
     for(uint i = 0; i < ret; i++){  
-      printf(2, "%d\t%s\t%d\t%d\t%d\t", table[i].pid, table[i].name, table[i].uid, table[i].gid, table[i].ppid);
+      printf(2, "%d\t%s\t%d\t%d\t%d\t%d\t", table[i].pid, table[i].name, table[i].uid, table[i].gid, table[i].ppid, table[i].priority);
       printnum(table[i].elapsed_ticks); 
       printnum(table[i].cpu_total_ticks);
       printf(2, "%s\t%d\n", table[i].state, table[i].size);

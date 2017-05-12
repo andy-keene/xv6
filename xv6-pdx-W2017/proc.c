@@ -1073,7 +1073,7 @@ procdump(void)
   #ifdef DEBUG
   cprintf("\nNPROCS = %d\n", NPROC); //to be used for P3 testing
   #endif
-  cprintf("\nPID\tName\tUID\tGID\tPPID\tELapsed\tCPU\tState\tSize\tPCs\n");
+  cprintf("\nPID\tName\tUID\tGID\tPPID\tPrio\tELapsed\tCPU\tState\tSize\tPCs\n");
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->state == UNUSED)
       continue;
@@ -1081,7 +1081,7 @@ procdump(void)
       state = states[p->state];
     else
       state = "???";
-    cprintf("%d\t%s\t%d\t%d\t%d\t", p->pid, p->name, p->uid, p->gid, (p->parent ? p->parent->pid : p->pid) );
+    cprintf("%d\t%s\t%d\t%d\t%d\t%d\t", p->pid, p->name, p->uid, p->gid, (p->parent ? p->parent->pid : p->pid), p->priority);
     printnum(curr_ticks - p->start_ticks); 
     printnum(p->cpu_ticks_total);
     cprintf("%s\t%d\t", state, p->sz);
@@ -1116,6 +1116,7 @@ getprocs(uint max, struct uproc *table)
     table[i].uid = p->uid;
     table[i].gid = p->gid;
     table[i].ppid = (p->parent ? p->parent->pid : p->pid);
+    table[i].priority = p->priority;
     //is it fine to calculate the elapsed time in-line?
     table[i].elapsed_ticks = ticks - p->start_ticks;
     table[i].cpu_total_ticks = p->cpu_ticks_total;
