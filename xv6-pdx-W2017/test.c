@@ -190,10 +190,10 @@ void round_robin(void)
 
 void p3tests(void)
 {
-//  inf_loops();
+  inf_loops();
 //  sleep_test();
 //  round_robin();
-   free_zombie_tests();
+//   free_zombie_tests();
 
 }
 

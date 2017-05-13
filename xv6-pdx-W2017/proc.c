@@ -210,9 +210,9 @@ removeFromStateList(struct proc** stateList, struct proc* p, enum procstate stat
   //Assert lock is held, and list is non-empty
   if(!holding(&ptable.lock))
     panic("Not holding lock when accessing state list (remove)");
-  if(p->state != state)
+  if(p->state != state){
     panic("Process has incorrect state");
-
+   }
   #ifdef DEBUG
   checkProcs("Calling from append to statelist"); //demonstrate list invariant is held
   #endif
@@ -255,7 +255,6 @@ popHeadFromStateList(struct proc** stateList, struct proc** p, enum procstate st
   *stateList = (*stateList)->next;
   if((*p)->state != state)
     panic("Process not in correct state");
-
   return 0;
 }
 
@@ -773,11 +772,16 @@ scheduler(void)
 }
 
 #else
+//Note: alternatively, could wrap pop head in a for loop -- cleaner?
+// doesn't work, because it will continue (upon context return) to work
+// on the same lower value queue
+//    for(int i = 0; i < MAX + 1; i++){
 void
 scheduler(void)
 {
   struct proc *p;
   int idle;  // for checking if processor is idle
+  int found_proc;
 
   for(;;){
     // Enable interrupts on this processor.
@@ -785,8 +789,17 @@ scheduler(void)
     idle = 1;  // assume idle unless we schedule a process
 
     acquire(&ptable.lock);
-    //try to move p from RUNNABLE -> RUNNING; wait if no runnable proc is found
-    if(popHeadFromStateList(&ptable.pLists.ready[0], &p, RUNNABLE) == 0){
+
+    //reset flag and find next process to run (prio.high -> prio.low)
+    found_proc = 0;
+    for(int i = 0; i < MAX + 1; i++){
+      if(popHeadFromStateList(&ptable.pLists.ready[i], &p, RUNNABLE) == 0){
+        found_proc = 1;
+        break;
+      }
+    }
+
+    if(found_proc == 1){
       prependToStateList(&ptable.pLists.running, p, RUNNING);      
       
       // Switch to chosen process.  It is the process's job
@@ -798,12 +811,14 @@ scheduler(void)
       //start_ticks before contx swtch
       p->cpu_ticks_in = ticks;
       swtch(&cpu->scheduler, proc->context);
+
       switchkvm();
 
       // Process is done running for now.
       // It should have changed its p->state before coming back.
       proc = 0;
-    }
+      }
+
     release(&ptable.lock);
     // if idle, wait for next interrupt
     if (idle) {
@@ -843,6 +858,7 @@ sched(void)
 {
   int intena;
   uint cpu_ticks;
+//  int new_priority;
 
   if(!holding(&ptable.lock))
     panic("sched ptable.lock");
@@ -853,13 +869,21 @@ sched(void)
   if(readeflags()&FL_IF)
     panic("sched interruptible");
   intena = cpu->intena;
-  //add cpu run time before swapping out
 
+  //update cpu time and budget
   cpu_ticks = ticks - proc->cpu_ticks_in;
   proc->budget -= cpu_ticks;
   proc->cpu_ticks_total += cpu_ticks;
-  
-//  proc->cpu_ticks_total += ticks - proc->cpu_ticks_in;
+
+  if(proc->budget <= 0){     //awkward nested ifs, but more performant the flags
+    if(proc->state == RUNNABLE && proc->priority < MAX){
+      removeFromStateList(&ptable.pLists.ready[proc->priority], proc, RUNNABLE);  
+      appendToStateList(&ptable.pLists.ready[proc->priority + 1], proc, RUNNABLE);
+    }
+    proc->budget = DEFAULT_BUDGET;
+    proc->priority += (proc->priority < MAX) ? 1 : 0;     // I don't like updating priority after it's placement on the list, but it's less redundant
+  }
+
   swtch(&proc->context, cpu->scheduler);
   
   cpu->intena = intena;
