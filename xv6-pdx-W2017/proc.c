@@ -32,7 +32,7 @@ struct {
   struct proc proc[NPROC];
   #ifdef CS333_P3P4
   struct StateLists pLists;
-  uint promoteAtTime;         // where to set at?
+  uint PromoteAtTime;
   #endif
 } ptable;
 
@@ -786,12 +786,17 @@ scheduler(void)
   for(;;){
     // Enable interrupts on this processor.
     sti();
-    idle = 1;  // assume idle unless we schedule a process
+    idle = 1;         // assume idle unless we schedule a process
+    found_proc = 0;   // reset flag for finding proc
 
     acquire(&ptable.lock);
 
+    if(ptable.PromoteAtTime <= ticks){
+      ptable.PromoteAtTime += TICKS_TO_PROMOTE;
+      //do something
+    }
+
     //reset flag and find next process to run (prio.high -> prio.low)
-    found_proc = 0;
     for(int i = 0; i < MAX + 1; i++){
       if(popHeadFromStateList(&ptable.pLists.ready[i], &p, RUNNABLE) == 0){
         found_proc = 1;
