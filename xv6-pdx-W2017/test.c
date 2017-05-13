@@ -187,7 +187,11 @@ void round_robin(void)
 
 }
 
-
+void p4tests(void)
+{
+  int rc = setpriority(getpid(), 0);
+  printf(2, "Return code: %d\n", rc); 
+}
 void p3tests(void)
 {
   inf_loops();
@@ -200,7 +204,8 @@ void p3tests(void)
 int
 main(int argc, char*argv[])
 {
-  p3tests();
+  p4tests();
+//  p3tests();
 //  p2tests();
 
   exit();

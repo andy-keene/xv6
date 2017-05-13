@@ -124,6 +124,7 @@ void            freelistinfo(void);
 void            readylistinfo(void);
 void            sleepinglistinfo(void);
 void            zombielistinfo(void);
+int             setpriority(int, int);
 
 // swtch.S
 void            swtch(struct context**, struct context*);

@@ -8,12 +8,7 @@
 #include "spinlock.h"
 #include "uproc.h"
 
-#define TPS 100
-#define DEBUG                   // turns on checkProcs to prove list invariant
-#define NULL 0                     // only used in #DEBUG
-#define MAX 5                      // MAX + 1 defines # of queues in MLFQ
-#define TICKS_TO_PROMOTE 30*TPS    // ticks between prio resets
-#define DEFAULT_BUDGET 3*TPS       // defines alloted CPU time before demotion
+// #defines are located in proc.
 
 //Will use conditional compilation for all P3/P4...
 #ifdef CS333_P3P4
@@ -1236,6 +1231,45 @@ getprocs(uint max, struct uproc *table)
 }
 
 #ifdef CS333_P3P4
+
+// helper for sys_setpriority system call
+// since we may need to make a list transition
+// and/or update priority
+int
+setpriority(int pid, int priority)
+{
+  int rc = -1;
+  struct proc *p;
+
+  if(priority < 0 || priority > MAX)    
+    return -1;
+
+  //search sleeping, ready, and running lists for proc
+  if(getProcess(ptable.pLists.running, &p, pid) == 0){
+    rc = 0;
+  } 
+  else if(getProcess(ptable.pLists.sleep, &p, pid) == 0){
+    rc = 0;
+  } 
+  else {
+    for(int i = 0; i < MAX + 1; i++){
+      //only runnable processes transition states, so handle here
+      if(getProcess(ptable.pLists.ready[i], &p, pid) == 0){
+        rc = 0;
+        removeFromStateList(&ptable.pLists.ready[i], p, RUNNABLE);
+        appendToStateList(&ptable.pLists.ready[priority], p, RUNNABLE);
+        break;
+      }
+    }
+  }
+  //update priority and budget (best for runnable)
+  if(rc == 0){
+    p->priority = priority;
+    p->budget = DEFAULT_BUDGET;
+  }
+ 
+  return rc;
+}
 #ifdef DEBUG
 
 // Given debug code: modified to return n
