@@ -12,7 +12,7 @@
 #define DEBUG                   // turns on checkProcs to prove list invariant
 #define NULL 0                     // only used in #DEBUG
 #define MAX 5                      // MAX + 1 defines # of queues in MLFQ
-#define TICKS_TO_PROMOTE 10*TPS    // ticks between prio resets
+#define TICKS_TO_PROMOTE 30*TPS    // ticks between prio resets
 #define DEFAULT_BUDGET 3*TPS       // defines alloted CPU time before demotion
 
 //Will use conditional compilation for all P3/P4...
@@ -64,9 +64,6 @@ checkProcs(char *s);
 
 #ifdef CS333_P3P4
 
-// Note: an optimization to the lists handling child procs would be a function
-// "getnextchild()" which updates the given pointer, and returns the child through refference
-// kind of like a generator?
 
 // ------ exit(), kill(), wait() helper functions -------
 // Traverse given staetList passing children of parent to initproc
@@ -275,6 +272,10 @@ initUnused(void)
     p->next = ptable.pLists.free; 
     ptable.pLists.free = p;
   }
+  #ifdef DEBUG
+  //demonstrate list invariant is held
+  checkProcs("Calling from append to initunused");
+  #endif
 }
 
 // Adds to end of statelist
@@ -321,6 +322,71 @@ prependToStateList(struct proc** stateList, struct proc* p, enum procstate state
   checkProcs("Calling from append to statelist"); 
   #endif
 }
+
+
+// ------- priority and budget helper functions for MLFQ --------
+
+// clone of appendToStateList() but does not set state and nullify 
+// last ptr; instead simply appends p to stateList
+static void
+appendToQueue(struct proc** stateList, struct proc* p)
+{
+  //Assert lock is held
+  if(!holding(&ptable.lock))
+    panic("Not holding lock when accessing state list (append)");
+
+  if(!*stateList){
+    *stateList = p;
+  } else {
+    struct proc *curr = *stateList;
+    while(curr->next)
+      curr = curr->next;
+    curr->next = p;
+  }
+}
+
+// For each process on the given a state increases it's priority
+// by 1 iff the current priority != 0 and reset the budget to 
+// DEFAULT_BUDGET. Built for high reuseability
+// efficiency: O(n) where n is the size of the state list
+static void
+setPrioBudget(struct proc* stateList) //, uint new_priority)
+{
+  //just use stateList as curr (is is a copy of the memory address)
+  while(stateList){
+    stateList->priority -= (stateList->priority == 0) ? 0 : 1;
+    stateList->budget = DEFAULT_BUDGET;
+    stateList = stateList->next;
+  }
+}
+
+static void
+priorityPromotion(void)
+{
+  //Assert lock is held, and list is non-empty
+  if(!holding(&ptable.lock))
+    panic("Not holding lock when accessing state list (remove)");
+
+  // handle priority promotion on ready queues
+  for(int i = 0; i < MAX; i++){
+    appendToQueue(&ptable.pLists.ready[i], ptable.pLists.ready[i+1]);
+    setPrioBudget(ptable.pLists.ready[i]);
+    ptable.pLists.ready[i+1] = 0;  // key: nullify next list so the append for i > 0 is done in O(1) time
+  }
+
+  // promote all other processes
+  // this includes only sleep and running since
+  // embryo (only other canidate) is gauranteed to
+  // have a priority of 0
+  setPrioBudget(ptable.pLists.sleep);
+  setPrioBudget(ptable.pLists.running);
+
+  #ifdef DEBUG
+  // can't call checkprocs from here since a CPU may start before 
+  // userinit(). It starts scheduler which calls this. 
+  #endif
+}
+
 #endif
 
 void
@@ -418,6 +484,7 @@ userinit(void)
   extern char _binary_initcode_start[], _binary_initcode_size[];
   #ifdef CS333_P3P4 
   acquire(&ptable.lock);
+  ptable.PromoteAtTime = ticks + TICKS_TO_PROMOTE;
   initUnused();
   release(&ptable.lock);
   #endif    
@@ -529,7 +596,7 @@ fork(void)
   acquire(&ptable.lock);
   removeFromStateList(&ptable.pLists.embryo, np, EMBRYO);
   appendToStateList(&ptable.pLists.ready[np->priority], np, RUNNABLE);
-  //checkProcs("calling from fork()"); <-- put back once lists are done
+//  checkProcs("calling from fork()"); //<-- put back once lists are done
   release(&ptable.lock);
   #endif
   return pid;
@@ -791,9 +858,13 @@ scheduler(void)
 
     acquire(&ptable.lock);
 
+    #ifdef DEBUG
+//    checkProcs("Calling from scheduler"); //demonstrate list invariant is held
+    #endif
+
     if(ptable.PromoteAtTime <= ticks){
-      ptable.PromoteAtTime += TICKS_TO_PROMOTE;
-      //do something
+      ptable.PromoteAtTime = ticks + TICKS_TO_PROMOTE;
+      priorityPromotion();
     }
 
     //reset flag and find next process to run (prio.high -> prio.low)
@@ -1219,7 +1290,7 @@ checkProcs(char *s)
   int found;
   int isholding;
   struct proc *p;
-
+  int index = 0;
   isholding = holding(&ptable.lock);
   if (!isholding) acquire(&ptable.lock);
   for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
@@ -1227,9 +1298,10 @@ checkProcs(char *s)
     if (found == 1)  //invarient holds. 
       continue;
     if (found == 0)
-      cprintf("Process %s (PID: %d) not found on *any* list\n", p->name, p->pid);
+      cprintf("[Index %d] Name: %s PID: %d State: %d not found on *any* list\n", index, p->name, p->pid, p->state);
     if (found > 1)
       cprintf("Process %s (PID: %d) found on %d lists\n", p->name, p->pid, found);
+    index +=1;
     cprintf("Checkprocs diagnostic message: (%s)\n", s);
     panic("Process array and lists inconsistent\n");
   }
