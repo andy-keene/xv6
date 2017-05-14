@@ -202,11 +202,11 @@ removeFromStateList(struct proc** stateList, struct proc* p, enum procstate stat
   //Assert lock is held, and list is non-empty
   if(!holding(&ptable.lock))
     panic("Not holding lock when accessing state list (remove)");
-  if(p->state != state){
+  if(p->state != state)
     panic("Process has incorrect state");
-   }
+
   #ifdef DEBUG
-  checkProcs("Calling from append to statelist"); //demonstrate list invariant is held
+  checkProcs("Calling from removeFromStatelist"); //demonstrate list invariant is held
   #endif
 
   if(*stateList == p){
@@ -267,10 +267,6 @@ initUnused(void)
     p->next = ptable.pLists.free; 
     ptable.pLists.free = p;
   }
-  #ifdef DEBUG
-  //demonstrate list invariant is held
-  checkProcs("Calling from append to initunused");
-  #endif
 }
 
 // Adds to end of statelist
@@ -317,7 +313,6 @@ prependToStateList(struct proc** stateList, struct proc* p, enum procstate state
   checkProcs("Calling from append to statelist"); 
   #endif
 }
-
 
 // ------- priority and budget helper functions for MLFQ --------
 
@@ -369,19 +364,14 @@ priorityPromotion(void)
     ptable.pLists.ready[i+1] = 0;  // key: nullify next list so the append for i > 0 is done in O(1) time
   }
 
-  // promote all other processes
-  // this includes only sleep and running since
-  // embryo (only other canidate) is gauranteed to
-  // have a priority of 0
+  // promote sleep and running (2 CPUs)
+  // no others need be considered
   setPrioBudget(ptable.pLists.sleep);
   setPrioBudget(ptable.pLists.running);
 
-  #ifdef DEBUG
   // can't call checkprocs from here since a CPU may start before 
   // userinit(). It starts scheduler which calls this. 
-  #endif
 }
-
 #endif
 
 void
@@ -423,8 +413,11 @@ found:
   #ifndef CS333_P3P4 
   p->state = EMBRYO;
   #else
-  //move p -> EMBRYO
+  // move p -> EMBRYO
+  // set default prio/bdgt while lock is held
   prependToStateList(&ptable.pLists.embryo, p, EMBRYO);
+  p->priority = 0;
+  p->budget = DEFAULT_BUDGET;
   #endif
   p->pid = nextpid++;
   release(&ptable.lock);
@@ -454,13 +447,9 @@ found:
   sp -= 4;
   *(uint*)sp = (uint)trapret;
 
-  //initialize running time counts, and pio/bdgt in P4
+  //initialize running time counts
   p->cpu_ticks_total = 0;
   p->cpu_ticks_in = 0;
-  #ifdef CS333_P3P4
-  p->priority = 0;                // Q this is fine since this list is not accessed by anything else, correct?
-  p->budget = DEFAULT_BUDGET;
-  #endif
 
   sp -= sizeof *p->context;
   p->context = (struct context*)sp;
@@ -479,8 +468,8 @@ userinit(void)
   extern char _binary_initcode_start[], _binary_initcode_size[];
   #ifdef CS333_P3P4 
   acquire(&ptable.lock);
-  ptable.PromoteAtTime = ticks + TICKS_TO_PROMOTE;
   initUnused();
+  ptable.PromoteAtTime = ticks + TICKS_TO_PROMOTE;
   release(&ptable.lock);
   #endif    
 
@@ -591,7 +580,6 @@ fork(void)
   acquire(&ptable.lock);
   removeFromStateList(&ptable.pLists.embryo, np, EMBRYO);
   appendToStateList(&ptable.pLists.ready[np->priority], np, RUNNABLE);
-//  checkProcs("calling from fork()"); //<-- put back once lists are done
   release(&ptable.lock);
   #endif
   return pid;
@@ -834,10 +822,7 @@ scheduler(void)
 }
 
 #else
-//Note: alternatively, could wrap pop head in a for loop -- cleaner?
-// doesn't work, because it will continue (upon context return) to work
-// on the same lower value queue
-//    for(int i = 0; i < MAX + 1; i++){
+
 void
 scheduler(void)
 {
@@ -883,7 +868,7 @@ scheduler(void)
       // Process is done running for now.
       // It should have changed its p->state before coming back.
       proc = 0;
-      }
+    }
 
     release(&ptable.lock);
     // if idle, wait for next interrupt
@@ -1229,8 +1214,8 @@ getprocs(uint max, struct uproc *table)
 #ifdef CS333_P3P4
 
 // helper for sys_setpriority system call
-// since we may need to make a list transition
-// and/or update priority
+// since we must access the list to find pid
+// and may need to make a list transition
 int
 setpriority(int pid, int priority)
 {
@@ -1277,6 +1262,7 @@ setpriority(int pid, int priority)
   release(&ptable.lock);
   return rc;
 }
+
 #ifdef DEBUG
 
 // Given debug code: modified to return n
