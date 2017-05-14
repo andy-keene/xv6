@@ -7,7 +7,7 @@
 #define TICKS_TO_PROMOTE 30*TPS    // ticks between prio resets
 #define DEFAULT_BUDGET 3*TPS       // defines alloted CPU time before demotion
 
-// MAX,TPS is defined in defs.h for user-kernel visibility
+// MAX,TPS is defined in param.h for user-kernel visibility
 
 
 // Per-CPU state
