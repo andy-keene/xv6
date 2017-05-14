@@ -3,7 +3,7 @@
 #define DEBUG                      // turns on checkProcs to prove list invariant
 #define NULL 0                     // only used in #DEBUG
 #define TPS 100
-#define MAX 5
+//#define MAX 5
 #define TICKS_TO_PROMOTE 30*TPS    // ticks between prio resets
 #define DEFAULT_BUDGET 3*TPS       // defines alloted CPU time before demotion
 

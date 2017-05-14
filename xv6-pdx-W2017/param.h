@@ -14,3 +14,4 @@
 #define FSSIZE       2000  // size of file system in blocks  // CS333 requires a larger FS.
 #define INITUID      0   // UID of 1st process 
 #define INITGID      0   // GID of 1st process
+#define MAX          5   // Defines number of ready queues for MLFQ (0-MAX)
