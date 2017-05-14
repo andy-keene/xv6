@@ -8,7 +8,7 @@
 #include "spinlock.h"
 #include "uproc.h"
 
-// #defines are located in proc.
+// #defines are located in proc.h
 
 //Will use conditional compilation for all P3/P4...
 #ifdef CS333_P3P4
@@ -852,16 +852,11 @@ scheduler(void)
     found_proc = 0;   // reset flag for finding proc
 
     acquire(&ptable.lock);
-
-    #ifdef DEBUG
-//    checkProcs("Calling from scheduler"); //demonstrate list invariant is held
-    #endif
-
+    //check for promotion
     if(ptable.PromoteAtTime <= ticks){
-      ptable.PromoteAtTime = ticks + TICKS_TO_PROMOTE;
       priorityPromotion();
+      ptable.PromoteAtTime = ticks + TICKS_TO_PROMOTE;
     }
-
     //reset flag and find next process to run (prio.high -> prio.low)
     for(int i = 0; i < MAX + 1; i++){
       if(popHeadFromStateList(&ptable.pLists.ready[i], &p, RUNNABLE) == 0){
@@ -929,7 +924,6 @@ sched(void)
 {
   int intena;
   uint cpu_ticks;
-//  int new_priority;
 
   if(!holding(&ptable.lock))
     panic("sched ptable.lock");
@@ -946,13 +940,14 @@ sched(void)
   proc->budget -= cpu_ticks;
   proc->cpu_ticks_total += cpu_ticks;
 
-  if(proc->budget <= 0){     //awkward nested ifs, but more performant the flags
+  if(proc->budget <= 0){     //awkward nested ifs, but more performant than flags
     if(proc->state == RUNNABLE && proc->priority < MAX){
       removeFromStateList(&ptable.pLists.ready[proc->priority], proc, RUNNABLE);  
       appendToStateList(&ptable.pLists.ready[proc->priority + 1], proc, RUNNABLE);
     }
     proc->budget = DEFAULT_BUDGET;
-    proc->priority += (proc->priority < MAX) ? 1 : 0;     // I don't like updating priority after it's placement on the list, but it's less redundant
+    proc->priority += (proc->priority < MAX) ? 1 : 0;
+    //although it may already be on new list, invariant is held since we have the lock
   }
 
   swtch(&proc->context, cpu->scheduler);
@@ -1128,7 +1123,8 @@ kill(int pid)
     if(p->state == SLEEPING){
       //move p SLEEPING-> RUNNABLE 
       removeFromStateList(&ptable.pLists.sleep, p, SLEEPING);
-      appendToStateList(&ptable.pLists.ready[p->priority], p, RUNNABLE);
+      appendToStateList(&ptable.pLists.ready[0], p, RUNNABLE); 
+      //top priority expidites freeing of resources
     }
   }
   
@@ -1172,7 +1168,7 @@ procdump(void)
   uint pc[10];
   uint curr_ticks = ticks;
   #ifdef DEBUG
-  cprintf("\nNPROCS = %d\n", NPROC); //to be used for P3 testing
+  cprintf("\nNPROCS = %d\n", NPROC); //to be used for P3/P4 testing
   #endif
   cprintf("\nPID\tName\tUID\tGID\tPPID\tPrio\tELapsed\tCPU\tState\tSize\tPCs\n");
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
@@ -1243,7 +1239,9 @@ setpriority(int pid, int priority)
 
   if(priority < 0 || priority > MAX)    
     return -1;
-
+  acquire(&ptable.lock);
+  
+/* //alterntive way
   //search sleeping, ready, and running lists for proc
   if(getProcess(ptable.pLists.running, &p, pid) == 0){
     rc = 0;
@@ -1262,12 +1260,21 @@ setpriority(int pid, int priority)
       }
     }
   }
-  //update priority and budget (best for runnable)
-  if(rc == 0){
+*/
+
+  // if process with pid is found, update priority
+  // and budget. For reusability we search the
+  // zombie and embryo list (see Marks email) 
+  if(findProcess(&p, pid) == 0){
+    rc = 0;
+    if(p->state == RUNNABLE){
+      removeFromStateList(&ptable.pLists.ready[p->priority], p, RUNNABLE);
+      appendToStateList(&ptable.pLists.ready[priority], p, RUNNABLE);
+    }
     p->priority = priority;
     p->budget = DEFAULT_BUDGET;
   }
- 
+  release(&ptable.lock);
   return rc;
 }
 #ifdef DEBUG
