@@ -2,7 +2,6 @@
 #include "user.h"
 #include "uproc.h"
 #include "param.h" //for use of NPROC
-const uint TPS = 100;
 
 static void
 set_gid(uint gid)
