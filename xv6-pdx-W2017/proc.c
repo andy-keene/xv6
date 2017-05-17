@@ -335,8 +335,9 @@ appendToQueue(struct proc** stateList, struct proc* p)
   }
 }
 
-// For each process on the given a state increases it's priority
-// by 1 iff the current priority != 0 and reset the budget to 
+// For each process on the given a stateList increases it's priority
+// by 1 iff the current priority != 0 (i.e subtracts one from p->priority)
+// and resets the budget to 
 // DEFAULT_BUDGET. Built for high reuseability
 // efficiency: O(n) where n is the size of the state list
 static void
@@ -842,7 +843,7 @@ scheduler(void)
       priorityPromotion();
       ptable.PromoteAtTime = ticks + TICKS_TO_PROMOTE;
     }
-    //reset flag and find next process to run (prio.high -> prio.low)
+    //find next process to run (priority high -> low)
     for(int i = 0; i < MAX + 1; i++){
       if(popHeadFromStateList(&ptable.pLists.ready[i], &p, RUNNABLE) == 0){
         found_proc = 1;
@@ -869,7 +870,6 @@ scheduler(void)
       // It should have changed its p->state before coming back.
       proc = 0;
     }
-
     release(&ptable.lock);
     // if idle, wait for next interrupt
     if (idle) {
@@ -1225,28 +1225,6 @@ setpriority(int pid, int priority)
   if(priority < 0 || priority > MAX)    
     return -1;
   acquire(&ptable.lock);
-  
-/* //alterntive way
-  //search sleeping, ready, and running lists for proc
-  if(getProcess(ptable.pLists.running, &p, pid) == 0){
-    rc = 0;
-  } 
-  else if(getProcess(ptable.pLists.sleep, &p, pid) == 0){
-    rc = 0;
-  } 
-  else {
-    for(int i = 0; i < MAX + 1; i++){
-      //only runnable processes transition states, so handle here
-      if(getProcess(ptable.pLists.ready[i], &p, pid) == 0){
-        rc = 0;
-        removeFromStateList(&ptable.pLists.ready[i], p, RUNNABLE);
-        appendToStateList(&ptable.pLists.ready[priority], p, RUNNABLE);
-        break;
-      }
-    }
-  }
-*/
-
   // if process with pid is found, update priority
   // and budget. For reusability we search the
   // zombie and embryo list (see Marks email) 
