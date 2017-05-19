@@ -1108,8 +1108,7 @@ kill(int pid)
     if(p->state == SLEEPING){
       //move p SLEEPING-> RUNNABLE 
       removeFromStateList(&ptable.pLists.sleep, p, SLEEPING);
-      appendToStateList(&ptable.pLists.ready[0], p, RUNNABLE); 
-      //top priority expidites freeing of resources
+      appendToStateList(&ptable.pLists.ready[p->priority], p, RUNNABLE); 
     }
   }
   

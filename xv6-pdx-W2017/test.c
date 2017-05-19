@@ -151,7 +151,7 @@ void sleep_test(void)
 
 void inf_loops(void)
 {
-  int pid, num = 40;
+  int pid, num = 8;
 
 //  printf(2, "Parent of Infiite Loops: %d\n", getpid());
   while(num > 0){
@@ -323,9 +323,9 @@ void round_robin(void)
 void p4tests(void)
 { 
 //  invalid_setpriority();
-  prioritypromotion();
+//  prioritypromotion();
 //  valid_setpriority();
-//  inf_loops();
+  inf_loops();
 //  inf_sleep_loops();
 }
 void p3tests(void)
