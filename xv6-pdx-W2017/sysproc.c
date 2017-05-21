@@ -170,3 +170,16 @@ sys_getprocs(void)
   //we're just a wrapper for getprocs() in proc.c
   return getprocs((uint)stack_arg, table);
 }
+
+// sets the priority of the calling process
+// no list transitions since proc must be in RUNNING
+int
+sys_setpriority(void)
+{ 
+  int pid, priority;
+  if(argint(0, &pid) < 0 || argint(1, &priority) < 0)
+    return -1;
+
+  //access to lists are needed, so call into proc.c 
+  return setpriority(pid, priority);
+}

@@ -2,7 +2,6 @@
 #include "user.h"
 #include "uproc.h"
 #include "param.h" //for use of NPROC
-const uint TPS = 100;
 
 static void
 set_gid(uint gid)
@@ -152,9 +151,9 @@ void sleep_test(void)
 
 void inf_loops(void)
 {
-  int pid, num = 5;
+  int pid, num = 8;
 
-  printf(2, "Parent of Infiite Loops: %d\n", getpid());
+//  printf(2, "Parent of Infiite Loops: %d\n", getpid());
   while(num > 0){
 
     pid = fork();
@@ -164,14 +163,148 @@ void inf_loops(void)
     num -= 1;
   }
 
+  printf(2, "Parent of infinite loops is done creating children (%d)\n", getpid());
   while(1) ;
 
 }
 
 
+void inf_sleep_loops(void)
+{
+  int pid, num = 10;
+
+  while(num > 0){
+
+    pid = fork();
+    if(pid == 0){
+      setpriority(getpid(), 0);
+      if(getpid() % 2 == 0){
+        sleep(2000*TPS);
+      }
+      else{
+        while(1) ;
+      }
+      exit();
+    }
+    num -= 1;
+  }
+
+  printf(2, "Parent of infinite loops is done creating children (%d)\n", getpid());
+  wait() ;
+
+}
+
+
+void valid_setpriority(void)
+{
+  int pid, num = 15;
+  int children[NPROC];
+  int index = 0;
+
+  for(int i = 0; i < num; i ++){
+
+    pid  = fork();
+    if(pid == 0){
+      while(1) ;   //spin child
+    }
+   children[index++] = pid;
+  }
+  
+  printf(2, "\nInitial batch done\n");
+
+  //create first batch of runnable processes
+  for(int i = 0; i < 3; i ++){
+
+    pid  = fork();
+    if(pid == 0){
+      while(1) ;   //spin child
+    }
+    int rc = setpriority(pid, MAX);
+    printf(2, "\nSet priority of child: %d to %d. Return code: %d\n", pid, MAX, rc);
+    sleep(2*TPS);
+    children[index++] = pid;
+  }
+
+  printf(2, "Killing children\n");  
+
+  //  kill chilren IN ORDER!
+  for(int i = 0 ;i < index; i++){
+    //mark for death, then wait to reap the child.
+    kill(children[i]);
+    while(wait() != children[i])
+      ; //spin waiting to reap child.
+
+  }
+
+  printf(2, "killed first batch\n");
+
+  for(int i = 0; i < 3; i++){
+
+    pid  = fork();
+    if(pid == 0){
+      sleep(100*TPS);
+    }
+    printf(2, "Created sleeping child: %d\n", pid);
+    sleep(5*TPS);
+    int rc = setpriority(pid, MAX);
+    printf(2, "\nSet priority of child: %d to %d. Return code: %d\n", pid, MAX, rc);
+    sleep(5*TPS);
+  }
+    
+}
+
+void invalid_setpriority(void)
+{
+  int rc;
+  sleep(2*TPS);
+  rc = setpriority(-1, MAX);
+  printf(2, "Priorityset() for PID -1 and priority MAX returned %d\n", rc);
+
+  rc = setpriority(1000, MAX);
+  printf(2, "Priorityset() for PID 1000 and priority MAX returned %d\n", rc);
+  rc = setpriority(9999, MAX);
+  printf(2, "Priorityset() for PID 9999 and priority MAX returned %d\n", rc);
+
+  
+  rc = setpriority(1, MAX+1);
+  printf(2, "Priorityset() for PID 1 and priority MAX+1 (%d) returned %d\n", MAX+1, rc);
+  rc = setpriority(1, MAX+2);
+  printf(2, "Priorityset() for PID 1 and priority MAX+2 (%d) returned %d\n", MAX+2, rc);
+  return;
+}
+
+void prioritypromotion()
+{
+  int pid, num = 10;
+
+  while(num > 0){
+
+    pid = fork();
+    if(pid == 0){
+      while(1)
+        ;
+    }
+    num -= 1;
+  }
+
+  printf(2, "parent done creating creating prio 0 children\n");
+  num = 10;
+  while(num > 0){
+
+    pid = fork();
+    if(pid == 0){
+      while(1)
+        ;
+    }
+    num -= 1;
+    setpriority(pid, MAX);
+  }
+  printf(2, "parent done creating low prio creating children\n");
+  wait();
+}
 void round_robin(void)
 {
-  int pid, num = 20;
+  int pid, num = 40;
 
   while(num > 0){
 
@@ -187,20 +320,28 @@ void round_robin(void)
 
 }
 
-
+void p4tests(void)
+{ 
+//  invalid_setpriority();
+//  prioritypromotion();
+//  valid_setpriority();
+  inf_loops();
+//  inf_sleep_loops();
+}
 void p3tests(void)
 {
 //  inf_loops();
 //  sleep_test();
 //  round_robin();
-   free_zombie_tests();
+//   free_zombie_tests();
 
 }
 
 int
 main(int argc, char*argv[])
 {
-  p3tests();
+  p4tests();
+//  p3tests();
 //  p2tests();
 
   exit();
