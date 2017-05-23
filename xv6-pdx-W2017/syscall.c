@@ -190,6 +190,7 @@ const char * syscallnames[] = {
  [SYS_chgrp]        "chgrp",
 #endif
 };
+#endif //ed PRINT_SYSCALLS
 
 void
 syscall(void)

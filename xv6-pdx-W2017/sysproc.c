@@ -197,7 +197,7 @@ sys_chmod(void)
   if(argint(1, &mode) < 0)
     return -1; 
 
-  cprint("Path: %s\nInt: %d", pathname, mode);
+//  cprint("Path: %s\nInt: %d", pathname, mode);
 
   return 0;
 }
