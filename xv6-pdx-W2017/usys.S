@@ -37,4 +37,8 @@ SYSCALL(getppid)
 SYSCALL(setuid)
 SYSCALL(setgid)
 SYSCALL(getprocs)
-
+#ifdef CS333_P5
+SYSCALL(chmod)
+SYSCALL(chown)
+SYSCALL(chgrp)
+#endif

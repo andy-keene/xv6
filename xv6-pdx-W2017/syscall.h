@@ -29,3 +29,9 @@
 #define SYS_setuid   SYS_getppid+1
 #define SYS_setgid   SYS_setuid+1
 #define SYS_getprocs SYS_setgid+1
+//conditional on P5 flag
+#ifdef CS333_P5
+#define SYS_chmod    SYS_getprocs+1
+#define SYS_chown    SYS_chmod+1
+#define SYS_chgrp    SYS_chown+1
+#endif
