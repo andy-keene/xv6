@@ -35,6 +35,8 @@ uint getppid(void);
 int setuid(uint);
 int setgid(uint);
 int getprocs(uint, struct uproc *);
+//Project 4
+int setpriority(int, int);
 //Project 5
 #ifdef CS333_P5
 int chmod(char*, int);

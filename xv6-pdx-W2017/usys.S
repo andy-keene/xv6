@@ -37,6 +37,7 @@ SYSCALL(getppid)
 SYSCALL(setuid)
 SYSCALL(setgid)
 SYSCALL(getprocs)
+SYSCALL(setpriority)
 #ifdef CS333_P5
 SYSCALL(chmod)
 SYSCALL(chown)
