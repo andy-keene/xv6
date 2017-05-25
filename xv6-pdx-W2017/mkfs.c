@@ -230,9 +230,12 @@ ialloc(ushort type)
   din.type = xshort(type);
   din.nlink = xshort(1);
   din.size = xint(0);
+#ifdef CS333_P5
+  //use default when building the file system
   din.uid = DEFAULT_UID;
   din.gid = DEFAULT_GID;
   din.mode.asInt = DEFAULT_MODE;
+#endif
   winode(inum, &din);
   return inum;
 }
