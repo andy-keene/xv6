@@ -493,8 +493,8 @@ userinit(void)
   p->cwd = namei("/");
   
   // 1-st process UID/GID in param.h
-  p->uid = INITUID; 
-  p->gid = INITGID;
+  p->uid = DEFAULT_UID; 
+  p->gid = DEFAULT_GID;
   p->start_ticks = ticks; 
   #ifndef CS333_P3P4
   p->state = RUNNABLE;
