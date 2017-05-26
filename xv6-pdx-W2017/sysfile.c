@@ -456,30 +456,19 @@ sys_pipe(void)
 int
 sys_chmod(void)
 {
-  //note: mode_asInt is really a uint representing the mode flags
-  //      but matches naming convention of inode for clarity
-  int mode, setuid, user, group, other;
-  uint mode_asInt;
+  int mode;
   char *path;
   struct inode *ip;
 
-  //retrieve args from stack, and prelim. validate mode
+  //retrieve args from stack
   if(argptr(0, (void*)&path, sizeof(*path)) < 0 ||
      argint(1, &mode) < 0)
     return -1;
-  if(mode < 0 || mode > 1777)
-    return -1;
 
-  //extract invidual permissions, validate, then
-  //use bit shifting and or-ing to set flags as a uint
-  setuid = (mode / 1000) % 10;
-  user = (mode / 100) % 10;
-  group = (mode / 10) % 10;
-  other = mode % 10;
-  if(setuid > 1 || user > 7 || group > 7 || other > 7)
+  //1023 corresponds to max octal mode 1777
+  //simple extra validation
+  if(mode < 0 || mode > 1023)
     return -1;
-
-  mode_asInt = (setuid << 9) | (user << 6) | (group << 3) | other;
 
   //get inode reference to file, and update mode transactionally
   begin_op();
@@ -488,7 +477,9 @@ sys_chmod(void)
     end_op();
     return -1;
   } 
-  ip->mode.asInt = mode_asInt;
+  ilock(ip);
+  ip->mode.asInt = mode;
+  iunlock(ip);
   iupdate(ip);
   end_op();
 
