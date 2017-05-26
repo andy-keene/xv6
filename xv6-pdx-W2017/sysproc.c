@@ -184,36 +184,3 @@ sys_setpriority(void)
   return setpriority(pid, priority);
 }
 
-#ifdef CS333_P5
-int
-sys_chmod(void)
-{
-  int mode;
-  char *pathname;
-
-  //return failure to retrieve arguments
-  if(argptr(0, (void*)&pathname, sizeof(*pathname)) < 0)
-    return -1;
-  if(argint(1, &mode) < 0)
-    return -1; 
-
-//  cprint("Path: %s\nInt: %d", pathname, mode);
-
-  return 0;
-}
-
-int
-sys_chown(void)
-{
-
-  return 0;
-}
-
-int
-sys_chgrp(void)
-{
-
-  return 0;
-}
-
-#endif

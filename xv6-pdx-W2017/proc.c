@@ -547,8 +547,12 @@ fork(void)
     #ifndef CS333_P3P4 
     np->state = UNUSED;
     #else
+    //Move new proc from EMBRYO->UNUSED
+    //added in P5
+    acquire(&ptable.lock);
     removeFromStateList(&ptable.pLists.embryo, np, EMBRYO);
     prependToStateList(&ptable.pLists.free, np, UNUSED);
+    release(&ptable.lock);
     #endif
     return -1;
   }

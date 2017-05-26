@@ -84,3 +84,4 @@ test.c
 time.c
 ps.c
 uproc.h
+chmod.c

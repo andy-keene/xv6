@@ -81,15 +81,21 @@ stat(char *n, struct stat *st)
   return r;
 }
 
+//Modified atoi() in P5 to handle
+//negative integers
 int
 atoi(const char *s)
 {
-  int n;
+  int n, sign;
 
   n = 0;
+  while (*s == ' ') s++;  // remove leading spaces
+  sign = (*s == '-') ? -1 : 1;
+  if (*s == '+'  || *s == '-')
+    s++;
   while('0' <= *s && *s <= '9')
     n = n*10 + *s++ - '0';
-  return n;
+  return sign*n;
 }
 
 void*

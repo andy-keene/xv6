@@ -262,6 +262,15 @@ create(char *path, short type, short major, short minor)
   ip->major = major;
   ip->minor = minor;
   ip->nlink = 1;
+  #ifdef CS333_P5
+  //Must set permissions for all new file/dir creations
+  //at runtime. Currently set uid/gid to the calling proc,
+  //which is the proc creating the file. 
+  //Per convo w/ Enis, the uid/gid could be set as DEAFULT_s
+  ip->uid = proc->uid;
+  ip->gid = proc->gid;
+  ip->mode.asInt = DEFAULT_MODE;
+  #endif
   iupdate(ip);
 
   if(type == T_DIR){  // Create . and .. entries.
@@ -440,3 +449,64 @@ sys_pipe(void)
   fd[1] = fd1;
   return 0;
 }
+
+#ifdef CS333_P5
+//P5 system calls - belong in sys_file.c due to their nature
+
+int
+sys_chmod(void)
+{
+  //note: mode_asInt is really a uint representing the mode flags
+  //      but matches naming convention of inode for clarity
+  int mode, setuid, user, group, other;
+  uint mode_asInt;
+  char *path;
+  struct inode *ip;
+
+  //retrieve args from stack, and prelim. validate mode
+  if(argptr(0, (void*)&path, sizeof(*path)) < 0 ||
+     argint(1, &mode) < 0)
+    return -1;
+  if(mode < 0 || mode > 1777)
+    return -1;
+
+  //extract invidual permissions, validate, then
+  //use bit shifting and or-ing to set flags as a uint
+  setuid = (mode / 1000) % 10;
+  user = (mode / 100) % 10;
+  group = (mode / 10) % 10;
+  other = mode % 10;
+  if(setuid > 1 || user > 7 || group > 7 || other > 7)
+    return -1;
+
+  mode_asInt = (setuid << 9) | (user << 6) | (group << 3) | other;
+
+  //get inode reference to file, and update mode transactionally
+  begin_op();
+  if((ip = namei(path)) == 0){
+    cprintf("Failed to find file\n");
+    end_op();
+    return -1;
+  } 
+  ip->mode.asInt = mode_asInt;
+  iupdate(ip);
+  end_op();
+
+  return 0;
+}
+
+int
+sys_chown(void)
+{
+
+  return 0;
+}
+
+int
+sys_chgrp(void)
+{
+
+  return 0;
+}
+
+#endif

@@ -159,6 +159,7 @@ UPROGS=\
         _test\
         _ps\
         _time\
+        _chmod\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
