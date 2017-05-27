@@ -6,7 +6,12 @@
 #include "defs.h"
 #include "x86.h"
 #include "elf.h"
-
+#ifdef CS333_P5
+//need to include headers for inode
+//and mode union (in order!)
+#include "fs.h"
+#include "file.h"
+#endif
 int
 exec(char *path, char **argv)
 {
@@ -34,6 +39,20 @@ exec(char *path, char **argv)
 
   if((pgdir = setupkvm()) == 0)
     goto bad;
+  
+#ifdef CS333_P5
+  //the file should not be read unless the 
+  //process has execute permission for the file 
+  if(proc->uid == ip->uid && !ip->mode.flags.u_x){
+    goto bad; //  return -1;  //proc is owner and does not have exec. permissions
+  }
+  else if(proc->gid == ip->gid && !ip->mode.flags.g_x){
+    goto bad; // return -1;  //proc is group member and does not have exec. permissions
+  }
+  else if(!ip->mode.flags.o_x){
+    goto bad; //  return -1;  //proc belong in other which does not have exec. permissions
+  }
+#endif
 
   // Load program into memory.
   sz = 0;
@@ -92,6 +111,12 @@ exec(char *path, char **argv)
   proc->sz = sz;
   proc->tf->eip = elf.entry;  // main
   proc->tf->esp = sp;
+#ifdef CS333_P5
+  //if setuid is set, the process must inherit
+  //the files uid.
+  if(ip->mode.flags.setuid)
+    proc->uid = ip->uid;
+#endif
   switchuvm(proc);
   freevm(oldpgdir);
   return 0;
