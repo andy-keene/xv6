@@ -41,17 +41,23 @@ exec(char *path, char **argv)
     goto bad;
   
 #ifdef CS333_P5
+//  cprintf("Calling proc uid: %d, gid: %d. File uid: %d, gid: %d, perm: %d\n", proc->uid, proc->gid, ip->uid, ip->gid, ip->mode.asInt);
+//  cprintf("u_x: %d, g_x: %d, o_x: %d\n", ip->mode.flags.u_x, ip->mode.flags.g_x, ip->mode.flags.o_x);
   //the file should not be read unless the 
-  //process has execute permission for the file 
-  if(proc->uid == ip->uid && !ip->mode.flags.u_x){
-    goto bad; //  return -1;  //proc is owner and does not have exec. permissions
+  //process has execute permission for the file
+  // the if-clause being, proc->uid == ip->uid && !ip->mode.flags.u_x did not work?
+  if(proc->uid == ip->uid){
+    if(!ip->mode.flags.u_x) 
+      goto bad; //  return -1;  //proc is owner and does not have exec. permissions
   }
-  else if(proc->gid == ip->gid && !ip->mode.flags.g_x){
-    goto bad; // return -1;  //proc is group member and does not have exec. permissions
+  else if(proc->gid == ip->gid){
+    if(!ip->mode.flags.g_x)
+      goto bad; // return -1;  //proc is group member and does not have exec. permissions
   }
   else if(!ip->mode.flags.o_x){
     goto bad; //  return -1;  //proc belong in other which does not have exec. permissions
   }
+
 #endif
 
   // Load program into memory.

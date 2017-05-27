@@ -15,7 +15,7 @@ main(int argc, char *argv[])
   
   //invoke sys_call after using atoi()
   //to translate the GROUP given
-  if(chown(argv[2], atoi(argv[1])) < 0) 
+  if(chgrp(argv[2], atoi(argv[1])) < 0) 
     printf(1, "Failed to update %s\n", argv[2]);
 
   exit();
