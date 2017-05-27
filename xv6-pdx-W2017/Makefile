@@ -161,6 +161,7 @@ UPROGS=\
         _time\
         _chmod\
         _chown\
+        _chgrp\
         _p5-test\
         _testsetuid\
 

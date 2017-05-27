@@ -85,3 +85,9 @@ time.c
 ps.c
 uproc.h
 chmod.c
+chown.c
+chgrp.c
+p5-test.c
+p5-test.h
+testsetuid.c
+

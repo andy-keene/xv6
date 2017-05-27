@@ -499,7 +499,7 @@ sys_chown(void)
     return -1;
 
   //same validation as setuid(), since no
-  //process can have a uid < 0 or > 326
+  //process can have a uid < 0 or > 32767
   if(uid < 0 || uid > 32767)
     return -1;  //out of bounds
 
@@ -509,7 +509,7 @@ sys_chown(void)
     end_op();
     return -1;  //failed to find file
   }
-  //sync with disk if nec. + update file.uid
+  //sync with disk if nec. + update inodes uid
   ilock(ip);
   ip->uid = uid;
   iupdate(ip);
@@ -522,6 +522,32 @@ sys_chown(void)
 int
 sys_chgrp(void)
 {
+  int gid;
+  char *path;
+  struct inode *ip;
+
+  //retrieve args from stack
+  if(argptr(0, (void*)&path, sizeof(*path)) < 0 ||
+     argint(1, &gid) < 0)
+    return -1;
+
+  //same validation as setgid(), since no
+  //process can have a gid < 0 or > 32767
+  if(gid < 0 || gid > 32767)
+    return -1;  //out of bounds
+
+  //get inode reference to file, and update gid transactionally
+  begin_op();
+  if((ip = namei(path)) == 0){
+    end_op();
+    return -1;  //failed to find file
+  }
+  //sync with disk if nec. + update inodes gid
+  ilock(ip);
+  ip->gid = gid;
+  iupdate(ip);
+  iunlock(ip);
+  end_op();
 
   return 0;
 }

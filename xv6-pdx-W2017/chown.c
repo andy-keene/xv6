@@ -3,7 +3,6 @@
 //       OWNER is an integer representing the UID of the owning process 
 #include "types.h"
 #include "user.h"
-#include "date.h"
 
 int
 main(int argc, char *argv[])
