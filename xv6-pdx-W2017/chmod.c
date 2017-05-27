@@ -6,7 +6,6 @@
 #include "user.h"
 #include "date.h"
 
-
 int
 main(int argc, char *argv[])
 {
@@ -19,14 +18,13 @@ main(int argc, char *argv[])
     printf(1, "MODE must be 4 digits\n");
   }
  
-  //adapted from atoi for octal
+  //Note: strict enforcement on given mode, does not allow signed representations
+  //adapted from atoo for octal
   while('0' <= *argv[1] && *argv[1] <= '9')
     mode = 8*mode + *argv[1]++ - '0';
 
   if(chmod(argv[2], mode) < 0) 
     printf(1, "Failed to update %s\n", argv[2]);
-
-  printf(1, "Mode: %d, file: %s\n", mode, argv[0]);
 
   exit();
 }
@@ -44,5 +42,14 @@ main(int argc, char *argv[])
     return -1;
 
   mode_asInt = (setuid << 9) | (user << 6) | (group << 3) | other;
+
+  OR
+
+  while(*arv[1])
+   if(! *argv[1] <= 9 ...)
+     not a number!
+     exit();
+   else
+     update mode
 
 */

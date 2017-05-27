@@ -467,20 +467,20 @@ sys_chmod(void)
 
   //1023 corresponds to max octal mode 1777
   //simple extra validation
-  if(mode < 0 || mode > 1023)
+  if(mode < 0 || mode > 01777)
     return -1;
 
   //get inode reference to file, and update mode transactionally
   begin_op();
   if((ip = namei(path)) == 0){
-    cprintf("Failed to find file\n");
     end_op();
-    return -1;
-  } 
+    return -1;  //failed to find file
+  }
+  //sync with disk if nec. + update mode
   ilock(ip);
   ip->mode.asInt = mode;
-  iunlock(ip);
   iupdate(ip);
+  iunlock(ip);
   end_op();
 
   return 0;
@@ -489,6 +489,32 @@ sys_chmod(void)
 int
 sys_chown(void)
 {
+  int uid;
+  char *path;
+  struct inode *ip;
+
+  //retrieve args from stack
+  if(argptr(0, (void*)&path, sizeof(*path)) < 0 ||
+     argint(1, &uid) < 0)
+    return -1;
+
+  //same validation as setuid(), since no
+  //process can have a uid < 0 or > 326
+  if(uid < 0 || uid > 32767)
+    return -1;  //out of bounds
+
+  //get inode reference to file, and update uid transactionally
+  begin_op();
+  if((ip = namei(path)) == 0){
+    end_op();
+    return -1;  //failed to find file
+  }
+  //sync with disk if nec. + update file.uid
+  ilock(ip);
+  ip->uid = uid;
+  iupdate(ip);
+  iunlock(ip);
+  end_op();
 
   return 0;
 }

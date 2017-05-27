@@ -325,7 +325,7 @@ main(int argc, char *argv[])
 
   // test strings
   char *t0[] = {'\0'}; // dummy
-  char *t1[] = {"test", '\0'}; // {"testsetuid", '\0'};
+  char *t1[] = {"testsetuid", '\0'};
 
   while (1) {
     done = FALSE;
