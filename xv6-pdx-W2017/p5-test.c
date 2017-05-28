@@ -173,8 +173,6 @@ doChmodTest(char **cmd)
   mode = st.mode.asInt;
 
   for (i=0; i<NUMPERMSTOCHECK; i++) {
-    //andy add
-    printf(1, "Calling chmod with file: %s mode: %d", cmd[0], perms[i]);
 
     check(chmod(cmd[0], perms[i]));
     check(stat(cmd[0], &st));
@@ -190,6 +188,14 @@ doChmodTest(char **cmd)
 		      __FILE__, __LINE__);
       return NOPASS;
     }
+    //andys addition (why were we only comparing against the original 
+    // permissions?, what if failed on run number 2??)
+    if (perms[i] != testmode){
+      printf(2, "Error! chmod() failed to set permissions correctly. %s, %d\n",
+		      __FILE__, __LINE__);
+      return NOPASS;
+    }
+
   }
   chmod(cmd[0], 00755); // hack
   printf(1, "Test Passed\n");
