@@ -465,8 +465,7 @@ sys_chmod(void)
      argint(1, &mode) < 0)
     return -1;
 
-  //1023 corresponds to max octal mode 1777
-  //simple extra validation
+  //validate mode is in correct octal range
   if(mode < 0 || mode > 01777)
     return -1;
 
