@@ -7,6 +7,7 @@
 int
 main(int argc, char *argv[])
 {
+#ifdef CS333_P5
   if(argc != 3){
     printf(1, "Usage: chown OWNER TARGET\n");
     exit();
@@ -16,6 +17,6 @@ main(int argc, char *argv[])
   //to translate the OWNER given
   if(chown(argv[2], atoi(argv[1])) < 0) 
     printf(1, "Failed to update %s\n", argv[2]);
-
+#endif
   exit();
 }

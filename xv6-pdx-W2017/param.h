@@ -15,5 +15,6 @@
 
 #define DEFAULT_UID       0   // UID of 1st process and files created by mkfs on fs creation
 #define DEFAULT_GID       0   // GID of 1st process and files created by mkfs on fs creation
-#define DEFAULT_MODE  0x1ED   // Default mode of files created by mkfs on fs creation
+#define DEFAULT_MODE  00755   // Default mode of files created by mkfs on fs creation
                               // corresponds to mode = 0755, Setuid=1, User=7, Group=5, Owner=5 
+                              // the leading zero implies octal interpretation

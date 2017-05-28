@@ -7,6 +7,7 @@
 #include "stat.h"
 #include "p5-test.h"
 
+#ifdef CS333_P5
 static int
 canRun(char *name)
 {
@@ -316,10 +317,13 @@ printMenu(void)
   printf(1, "%d. exec()\n", i++);
   printf(1, "%d. setuid\n", i++);
 }
+#endif
 
 int
 main(int argc, char *argv[])
 {
+//in case this isnt taken out of the make file
+#ifdef CS333_P5
   int rc, select, done;
   char buf[5];
 
@@ -352,6 +356,6 @@ main(int argc, char *argv[])
 
   printf(1, "\nDone for now\n");
   free(buf);
+#endif
   exit();
 }
-

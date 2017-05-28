@@ -338,13 +338,6 @@ void p3tests(void)
 }
 void sys_calls(void)
 {
-  int rc;
-  rc = chmod("dir1/dir/chmod.txt", 1111 );
-  printf(2, "chmod returned %d\n", rc);
-  rc = chown("dir1/dir/chown.txt", 2222);
-  printf(2, "chmown returned %d\n", rc);
-  rc = chgrp("dir1/dir/chgrp.txt", 3333);
-  printf(2, "chgrp returned %d\n", rc);
 }
 
 void p5tests(void)

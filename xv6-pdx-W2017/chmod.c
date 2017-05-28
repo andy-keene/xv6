@@ -8,7 +8,8 @@
 int
 main(int argc, char *argv[])
 {
-  int mode = 0;
+//conditionaly compile code for P5
+#ifdef CS333_P5
   if(argc != 3){
     printf(1, "Usage: chmod MODE TARGET\n");
     exit();
@@ -17,38 +18,11 @@ main(int argc, char *argv[])
     printf(1, "MODE must be 4 digits\n");
   }
  
-  //Note: strict enforcement on given mode, does not allow signed representations
-  //adapted from atoo for octal
-  while('0' <= *argv[1] && *argv[1] <= '9')
-    mode = 8*mode + *argv[1]++ - '0';
-
-  if(chmod(argv[2], mode) < 0) 
+  //Per convo with Enis and Morrissey, atoo() offers
+  //strict enough enforcement for octal conversion
+  if(chmod(argv[2], atoo(argv[1])) < 0) 
     printf(1, "Failed to update %s\n", argv[2]);
-
+#endif
   exit();
 }
 
-/* 
-  Garbage bin
-
-  //extract invidual permissions, validate, then
-  //use bit shifting and or-ing to set flags as a uint
-  setuid = (mode / 1000) % 10;
-  user = (mode / 100) % 10;
-  group = (mode / 10) % 10;
-  other = mode % 10;
-  if(setuid > 1 || user > 7 || group > 7 || other > 7)
-    return -1;
-
-  mode_asInt = (setuid << 9) | (user << 6) | (group << 3) | other;
-
-  OR
-
-  while(*arv[1])
-   if(! *argv[1] <= 9 ...)
-     not a number!
-     exit();
-   else
-     update mode
-
-*/
