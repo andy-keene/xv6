@@ -22,6 +22,9 @@ exec(char *path, char **argv)
   struct inode *ip;
   struct proghdr ph;
   pde_t *pgdir, *oldpgdir;
+#ifdef CS333_P5
+  int set_uid = -1;
+#endif
 
   begin_op();
   if((ip = namei(path)) == 0){
@@ -41,23 +44,24 @@ exec(char *path, char **argv)
     goto bad;
   
 #ifdef CS333_P5
-//  cprintf("Calling proc uid: %d, gid: %d. File uid: %d, gid: %d, perm: %d\n", proc->uid, proc->gid, ip->uid, ip->gid, ip->mode.asInt);
-//  cprintf("u_x: %d, g_x: %d, o_x: %d\n", ip->mode.flags.u_x, ip->mode.flags.g_x, ip->mode.flags.o_x);
-  //the file should not be read unless the 
-  //process has execute permission for the file
-  // the if-clause being, proc->uid == ip->uid && !ip->mode.flags.u_x did not work?
+  //check for execute permissions in-order
+  //before the file is read 
   if(proc->uid == ip->uid){
     if(!ip->mode.flags.u_x) 
-      goto bad; //  return -1;  //proc is owner and does not have exec. permissions
+      goto bad;
   }
   else if(proc->gid == ip->gid){
     if(!ip->mode.flags.g_x)
-      goto bad; // return -1;  //proc is group member and does not have exec. permissions
+      goto bad;
   }
   else if(!ip->mode.flags.o_x){
-    goto bad; //  return -1;  //proc belong in other which does not have exec. permissions
+    goto bad; 
   }
-
+  
+  //save uid flag if flags.setuid is set
+  //since our ip ref. is obliterated later on
+  if(ip->mode.flags.setuid)
+    set_uid = ip->uid;
 #endif
 
   // Load program into memory.
@@ -119,9 +123,11 @@ exec(char *path, char **argv)
   proc->tf->esp = sp;
 #ifdef CS333_P5
   //if setuid is set, the process must inherit
-  //the files uid.
-  if(ip->mode.flags.setuid)
-    proc->uid = ip->uid;
+  //the file uid. if set_uid = -1, it was not set
+  //previously (note: -1 is chosen as init value
+  //since -1 is an illegal uid) 
+  if(set_uid != -1)
+    proc->uid = set_uid; 
 #endif
   switchuvm(proc);
   freevm(oldpgdir);
