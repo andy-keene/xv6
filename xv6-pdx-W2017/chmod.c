@@ -10,6 +10,7 @@ main(int argc, char *argv[])
 {
 //conditionaly compile code for P5
 #ifdef CS333_P5
+  int mode;
   if(argc != 3){
     printf(1, "Usage: chmod MODE TARGET\n");
     exit();
@@ -17,10 +18,21 @@ main(int argc, char *argv[])
   if(strlen(argv[1]) != 4){
     printf(1, "MODE must be 4 digits\n");
   }
- 
-  //Per convo with Enis and Morrissey, atoo() offers
-  //strict enough enforcement for octal conversion
-  if(chmod(argv[2], atoo(argv[1])) < 0) 
+
+  //adaption of atoo() to enforce correct 
+  //usage of chmod cmd. Note arguments > 1777
+  //are caught in system call
+  while(*argv[1]){
+    if('0' <= *argv[1] && *argv[1] <= '7'){
+      mode = mode*8 + *argv[1]++ - '0';
+    }
+    else{
+      printf(1, "Invalid MODE\n");
+      exit();
+    }
+  }
+
+  if(chmod(argv[2], mode) < 0) 
     printf(1, "Failed to update %s\n", argv[2]);
 #endif
   exit();
