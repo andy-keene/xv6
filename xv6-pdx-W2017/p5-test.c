@@ -210,7 +210,7 @@ doChownTest(char **cmd)
 
   printf(1, "\nExecuting chown test.\n\n");
 
-  stat(cmd[0], &st);
+  check(stat(cmd[0], &st));
   uid1 = st.uid;
 
   rc = chown(cmd[0], uid1+1);
@@ -222,7 +222,8 @@ doChownTest(char **cmd)
   stat(cmd[0], &st);
   uid2 = st.uid;
 
-  if (uid1 == uid2) {
+  //let's check the new uid is what we set it to
+  if (uid1 == uid2 || uid2 != (uid1 + 1)) {
     printf(2, "Error! test failed. Old uid: %d, new uid: uid2, should differ\n",
 		    uid1, uid2);
     return NOPASS;
@@ -252,7 +253,7 @@ doChgrpTest(char **cmd)
   stat(cmd[0], &st);
   gid2 = st.gid;
 
-  if (gid1 == gid2) {
+  if (gid1 == gid2 || gid2 != (gid1+1) ) {
     printf(2, "Error! test failed. Old gid: %d, new gid: gid2, should differ\n",
                     gid1, gid2);
     return NOPASS;
