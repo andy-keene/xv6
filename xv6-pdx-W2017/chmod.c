@@ -10,7 +10,7 @@ main(int argc, char *argv[])
 {
 //conditionaly compile code for P5
 #ifdef CS333_P5
-  int mode;
+  int mode = 0;
   if(argc != 3){
     printf(1, "Usage: chmod MODE TARGET\n");
     exit();
