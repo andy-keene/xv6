@@ -1,0 +1,573 @@
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  21 MAY 2017 09:53
+entering extended mode
+ restricted \write18 enabled.
+ file:line:error style messages enabled.
+ %&-line parsing enabled.
+**keene_project4.tex
+(./keene_project4.tex
+LaTeX2e <2016/03/31>
+Babel <3.9r> and hyphenation patterns for 83 language(s) loaded.
+(/usr/local/texlive/2016/texmf-dist/tex/latex/base/report.cls
+Document Class: report 2014/09/29 v1.4h Standard LaTeX document class
+(/usr/local/texlive/2016/texmf-dist/tex/latex/base/size11.clo
+File: size11.clo 2014/09/29 v1.4h Standard LaTeX file (size option)
+)
+\c@part=\count79
+\c@chapter=\count80
+\c@section=\count81
+\c@subsection=\count82
+\c@subsubsection=\count83
+\c@paragraph=\count84
+\c@subparagraph=\count85
+\c@figure=\count86
+\c@table=\count87
+\abovecaptionskip=\skip41
+\belowcaptionskip=\skip42
+\bibindent=\dimen102
+)
+(/usr/local/texlive/2016/texmf-dist/tex/latex/geometry/geometry.sty
+Package: geometry 2010/09/12 v5.6 Page Geometry
+
+(/usr/local/texlive/2016/texmf-dist/tex/latex/graphics/keyval.sty
+Package: keyval 2014/10/28 v1.15 key=value parser (DPC)
+\KV@toks@=\toks14
+)
+(/usr/local/texlive/2016/texmf-dist/tex/generic/oberdiek/ifpdf.sty
+Package: ifpdf 2016/05/14 v3.1 Provides the ifpdf switch
+)
+(/usr/local/texlive/2016/texmf-dist/tex/generic/oberdiek/ifvtex.sty
+Package: ifvtex 2016/05/16 v1.6 Detect VTeX and its facilities (HO)
+Package ifvtex Info: VTeX not detected.
+)
+(/usr/local/texlive/2016/texmf-dist/tex/generic/ifxetex/ifxetex.sty
+Package: ifxetex 2010/09/12 v0.6 Provides ifxetex conditional
+)
+\Gm@cnth=\count88
+\Gm@cntv=\count89
+\c@Gm@tempcnt=\count90
+\Gm@bindingoffset=\dimen103
+\Gm@wd@mp=\dimen104
+\Gm@odd@mp=\dimen105
+\Gm@even@mp=\dimen106
+\Gm@layoutwidth=\dimen107
+\Gm@layoutheight=\dimen108
+\Gm@layouthoffset=\dimen109
+\Gm@layoutvoffset=\dimen110
+\Gm@dimlist=\toks15
+)
+(/usr/local/texlive/2016/texmf-dist/tex/latex/base/inputenc.sty
+Package: inputenc 2015/03/17 v1.2c Input encoding file
+\inpenc@prehook=\toks16
+\inpenc@posthook=\toks17
+
+(/usr/local/texlive/2016/texmf-dist/tex/latex/base/latin1.def
+File: latin1.def 2015/03/17 v1.2c Input encoding file
+))
+(/usr/local/texlive/2016/texmf-dist/tex/latex/amsmath/amsmath.sty
+Package: amsmath 2016/03/10 v2.15b AMS math features
+\@mathmargin=\skip43
+
+For additional information on amsmath, use the `?' option.
+(/usr/local/texlive/2016/texmf-dist/tex/latex/amsmath/amstext.sty
+Package: amstext 2000/06/29 v2.01 AMS text
+
+(/usr/local/texlive/2016/texmf-dist/tex/latex/amsmath/amsgen.sty
+File: amsgen.sty 1999/11/30 v2.0 generic functions
+\@emptytoks=\toks18
+\ex@=\dimen111
+))
+(/usr/local/texlive/2016/texmf-dist/tex/latex/amsmath/amsbsy.sty
+Package: amsbsy 1999/11/29 v1.2d Bold Symbols
+\pmbraise@=\dimen112
+)
+(/usr/local/texlive/2016/texmf-dist/tex/latex/amsmath/amsopn.sty
+Package: amsopn 2016/03/08 v2.02 operator names
+)
+\inf@bad=\count91
+LaTeX Info: Redefining \frac on input line 199.
+\uproot@=\count92
+\leftroot@=\count93
+LaTeX Info: Redefining \overline on input line 297.
+\classnum@=\count94
+\DOTSCASE@=\count95
+LaTeX Info: Redefining \ldots on input line 394.
+LaTeX Info: Redefining \dots on input line 397.
+LaTeX Info: Redefining \cdots on input line 518.
+\Mathstrutbox@=\box26
+\strutbox@=\box27
+\big@size=\dimen113
+LaTeX Font Info:    Redeclaring font encoding OML on input line 634.
+LaTeX Font Info:    Redeclaring font encoding OMS on input line 635.
+\macc@depth=\count96
+\c@MaxMatrixCols=\count97
+\dotsspace@=\muskip10
+\c@parentequation=\count98
+\dspbrk@lvl=\count99
+\tag@help=\toks19
+\row@=\count100
+\column@=\count101
+\maxfields@=\count102
+\andhelp@=\toks20
+\eqnshift@=\dimen114
+\alignsep@=\dimen115
+\tagshift@=\dimen116
+\tagwidth@=\dimen117
+\totwidth@=\dimen118
+\lineht@=\dimen119
+\@envbody=\toks21
+\multlinegap=\skip44
+\multlinetaggap=\skip45
+\mathdisplay@stack=\toks22
+LaTeX Info: Redefining \[ on input line 2739.
+LaTeX Info: Redefining \] on input line 2740.
+)
+(/usr/local/texlive/2016/texmf-dist/tex/latex/amsfonts/amsfonts.sty
+Package: amsfonts 2013/01/14 v3.01 Basic AMSFonts support
+\symAMSa=\mathgroup4
+\symAMSb=\mathgroup5
+LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
+(Font)                  U/euf/m/n --> U/euf/b/n on input line 106.
+)
+(/usr/local/texlive/2016/texmf-dist/tex/latex/amsfonts/amssymb.sty
+Package: amssymb 2013/01/14 v3.01 AMS font symbols
+)
+(/usr/local/texlive/2016/texmf-dist/tex/latex/graphics/graphicx.sty
+Package: graphicx 2014/10/28 v1.0g Enhanced LaTeX Graphics (DPC,SPQR)
+
+(/usr/local/texlive/2016/texmf-dist/tex/latex/graphics/graphics.sty
+Package: graphics 2016/05/09 v1.0r Standard LaTeX Graphics (DPC,SPQR)
+
+(/usr/local/texlive/2016/texmf-dist/tex/latex/graphics/trig.sty
+Package: trig 2016/01/03 v1.10 sin cos tan (DPC)
+)
+(/usr/local/texlive/2016/texmf-dist/tex/latex/graphics-cfg/graphics.cfg
+File: graphics.cfg 2016/01/02 v1.10 sample graphics configuration
+)
+Package graphics Info: Driver file: pdftex.def on input line 96.
+
+(/usr/local/texlive/2016/texmf-dist/tex/latex/pdftex-def/pdftex.def
+File: pdftex.def 2011/05/27 v0.06d Graphics/color for pdfTeX
+
+(/usr/local/texlive/2016/texmf-dist/tex/generic/oberdiek/infwarerr.sty
+Package: infwarerr 2016/05/16 v1.4 Providing info/warning/error messages (HO)
+)
+(/usr/local/texlive/2016/texmf-dist/tex/generic/oberdiek/ltxcmds.sty
+Package: ltxcmds 2016/05/16 v1.23 LaTeX kernel commands for general use (HO)
+)
+\Gread@gobject=\count103
+))
+\Gin@req@height=\dimen120
+\Gin@req@width=\dimen121
+)
+(/usr/local/texlive/2016/texmf-dist/tex/latex/graphics/color.sty
+Package: color 2016/05/09 v1.1c Standard LaTeX Color (DPC)
+
+(/usr/local/texlive/2016/texmf-dist/tex/latex/graphics-cfg/color.cfg
+File: color.cfg 2016/01/02 v1.6 sample color configuration
+)
+Package color Info: Driver file: pdftex.def on input line 144.
+)
+(/usr/local/texlive/2016/texmf-dist/tex/latex/fancyhdr/fancyhdr.sty
+\fancy@headwidth=\skip46
+\f@ncyO@elh=\skip47
+\f@ncyO@erh=\skip48
+\f@ncyO@olh=\skip49
+\f@ncyO@orh=\skip50
+\f@ncyO@elf=\skip51
+\f@ncyO@erf=\skip52
+\f@ncyO@olf=\skip53
+\f@ncyO@orf=\skip54
+)
+(./keene_project4.aux
+
+LaTeX Warning: Label `fig:5' multiply defined.
+
+
+LaTeX Warning: Label `fig:1' multiply defined.
+
+
+LaTeX Warning: Label `fig:5' multiply defined.
+
+
+LaTeX Warning: Label `fig:5' multiply defined.
+
+
+LaTeX Warning: Label `fig:5' multiply defined.
+
+
+LaTeX Warning: Label `fig:5' multiply defined.
+
+
+LaTeX Warning: Label `fig:5' multiply defined.
+
+
+LaTeX Warning: Label `fig:5' multiply defined.
+
+
+LaTeX Warning: Label `fig:5' multiply defined.
+
+
+LaTeX Warning: Label `fig:5' multiply defined.
+
+
+LaTeX Warning: Label `fig:5' multiply defined.
+
+)
+\openout1 = `keene_project4.aux'.
+
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 19.
+LaTeX Font Info:    ... okay on input line 19.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 19.
+LaTeX Font Info:    ... okay on input line 19.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 19.
+LaTeX Font Info:    ... okay on input line 19.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 19.
+LaTeX Font Info:    ... okay on input line 19.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 19.
+LaTeX Font Info:    ... okay on input line 19.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 19.
+LaTeX Font Info:    ... okay on input line 19.
+
+*geometry* driver: auto-detecting
+*geometry* detected driver: pdftex
+*geometry* verbose mode - [ preamble ] result:
+* driver: pdftex
+* paper: letterpaper
+* layout: <same size as paper>
+* layoutoffset:(h,v)=(0.0pt,0.0pt)
+* modes: 
+* h-part:(L,W,R)=(54.2025pt, 505.89pt, 54.2025pt)
+* v-part:(T,H,B)=(54.2025pt, 686.56499pt, 54.2025pt)
+* \paperwidth=614.295pt
+* \paperheight=794.96999pt
+* \textwidth=505.89pt
+* \textheight=686.56499pt
+* \oddsidemargin=-18.06749pt
+* \evensidemargin=-18.06749pt
+* \topmargin=-55.06749pt
+* \headheight=12.0pt
+* \headsep=25.0pt
+* \topskip=11.0pt
+* \footskip=30.0pt
+* \marginparwidth=59.0pt
+* \marginparsep=10.0pt
+* \columnsep=10.0pt
+* \skip\footins=10.0pt plus 4.0pt minus 2.0pt
+* \hoffset=0.0pt
+* \voffset=0.0pt
+* \mag=1000
+* \@twocolumnfalse
+* \@twosidefalse
+* \@mparswitchfalse
+* \@reversemarginfalse
+* (1in=72.27pt=25.4mm, 1cm=28.453pt)
+
+(/usr/local/texlive/2016/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
+[Loading MPS to PDF converter (version 2006.09.02).]
+\scratchcounter=\count104
+\scratchdimen=\dimen122
+\scratchbox=\box28
+\nofMPsegments=\count105
+\nofMParguments=\count106
+\everyMPshowfont=\toks23
+\MPscratchCnt=\count107
+\MPscratchDim=\dimen123
+\MPnumerator=\count108
+\makeMPintoPDFobject=\count109
+\everyMPtoPDFconversion=\toks24
+) (/usr/local/texlive/2016/texmf-dist/tex/generic/oberdiek/pdftexcmds.sty
+Package: pdftexcmds 2016/05/10 v0.21 Utility functions of pdfTeX for LuaTeX (HO
+)
+
+(/usr/local/texlive/2016/texmf-dist/tex/generic/oberdiek/ifluatex.sty
+Package: ifluatex 2016/05/16 v1.4 Provides the ifluatex switch (HO)
+Package ifluatex Info: LuaTeX not detected.
+)
+Package pdftexcmds Info: LuaTeX not detected.
+Package pdftexcmds Info: \pdf@primitive is available.
+Package pdftexcmds Info: \pdf@ifprimitive is available.
+Package pdftexcmds Info: \pdfdraftmode found.
+)
+(/usr/local/texlive/2016/texmf-dist/tex/latex/oberdiek/epstopdf-base.sty
+Package: epstopdf-base 2016/05/15 v2.6 Base part for package epstopdf
+
+(/usr/local/texlive/2016/texmf-dist/tex/latex/oberdiek/grfext.sty
+Package: grfext 2016/05/16 v1.2 Manage graphics extensions (HO)
+
+(/usr/local/texlive/2016/texmf-dist/tex/generic/oberdiek/kvdefinekeys.sty
+Package: kvdefinekeys 2016/05/16 v1.4 Define keys (HO)
+))
+(/usr/local/texlive/2016/texmf-dist/tex/latex/oberdiek/kvoptions.sty
+Package: kvoptions 2016/05/16 v3.12 Key value format for package options (HO)
+
+(/usr/local/texlive/2016/texmf-dist/tex/generic/oberdiek/kvsetkeys.sty
+Package: kvsetkeys 2016/05/16 v1.17 Key value parser (HO)
+
+(/usr/local/texlive/2016/texmf-dist/tex/generic/oberdiek/etexcmds.sty
+Package: etexcmds 2016/05/16 v1.6 Avoid name clashes with e-TeX commands (HO)
+Package etexcmds Info: Could not find \expanded.
+(etexcmds)             That can mean that you are not using pdfTeX 1.50 or
+(etexcmds)             that some package has redefined \expanded.
+(etexcmds)             In the latter case, load this package earlier.
+)))
+Package grfext Info: Graphics extension search list:
+(grfext)             [.png,.pdf,.jpg,.mps,.jpeg,.jbig2,.jb2,.PNG,.PDF,.JPG,.JPE
+G,.JBIG2,.JB2,.eps]
+(grfext)             \AppendGraphicsExtensions on input line 456.
+
+(/usr/local/texlive/2016/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
+File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
+e
+))
+LaTeX Font Info:    Try loading font information for U+msa on input line 21.
+
+(/usr/local/texlive/2016/texmf-dist/tex/latex/amsfonts/umsa.fd
+File: umsa.fd 2013/01/14 v3.01 AMS symbols A
+)
+LaTeX Font Info:    Try loading font information for U+msb on input line 21.
+
+(/usr/local/texlive/2016/texmf-dist/tex/latex/amsfonts/umsb.fd
+File: umsb.fd 2013/01/14 v3.01 AMS symbols B
+) [1
+
+{/usr/local/texlive/2016/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
+LaTeX Font Info:    Try loading font information for OMS+cmr on input line 37.
+
+(/usr/local/texlive/2016/texmf-dist/tex/latex/base/omscmr.fd
+File: omscmr.fd 2014/09/29 v2.5h Standard LaTeX font definitions
+)
+LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10.95> not available
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 37.
+
+Overfull \hbox (68.70567pt too wide) in paragraph at lines 100--100
+ []\OT1/cmtt/m/n/10.95 PID     Name        UID        GID     PPID     Prio    
+Elapsed CPU     State   Size    PCs[] 
+ []
+
+
+Overfull \hbox (356.14006pt too wide) in paragraph at lines 100--100
+ []\OT1/cmtt/m/n/10.95 1       init         0          0       1       0       
+267.28  0.3     sleep   12288   80105469 801050a3 80107391 80106483 8010796f 80
+107755[] 
+ []
+
+
+Overfull \hbox (459.61644pt too wide) in paragraph at lines 100--100
+ []\OT1/cmtt/m/n/10.95 2       sh           0          0       1       0       
+267.22  0.3     sleep   16384   80105469 80100a4f 801020f4 80101326 80106643 80
+106483 8010796f 80107755[] 
+ []
+
+
+Overfull \hbox (4.37483pt too wide) in paragraph at lines 116--116
+ []\OT1/cmtt/m/n/10.95 PID     Name        UID        GID     PPID     Prio    
+Elapsed CPU     State   Size[] 
+ []
+
+
+Overfull \hbox (10.12352pt too wide) in paragraph at lines 116--116
+ []\OT1/cmtt/m/n/10.95 1       init         0          0       1       0       
+1.41    0.3     sleep   12288[] 
+ []
+
+
+Overfull \hbox (10.12352pt too wide) in paragraph at lines 116--116
+ []\OT1/cmtt/m/n/10.95 2       sh           0          0       1       1       
+1.35    0.3     sleep   16384[] 
+ []
+
+
+Overfull \hbox (10.12352pt too wide) in paragraph at lines 116--116
+ []\OT1/cmtt/m/n/10.95 3       ps           0          0       2       1       
+0.2     0.2     run     49152[] 
+ []
+
+
+Package Fancyhdr Warning: \headheight is too small (12.0pt): 
+ Make it at least 13.59999pt.
+ We now make it that large for the rest of the document.
+ This may cause the page layout to be inconsistent, however.
+
+[1] [2] [3] [4] [5] [6] [7] [8]
+<./images/demotion-start.png, id=43, 1102.1175pt x 310.15875pt>
+File: ./images/demotion-start.png Graphic file (type png)
+
+<use ./images/demotion-start.png>
+Package pdftex.def Info: ./images/demotion-start.png used on input line 335.
+(pdftex.def)             Requested size: 303.53708pt x 85.41933pt.
+
+<./images/demotion-0.png, id=45, 1102.1175pt x 482.80376pt>
+File: ./images/demotion-0.png Graphic file (type png)
+
+<use ./images/demotion-0.png>
+Package pdftex.def Info: ./images/demotion-0.png used on input line 342.
+(pdftex.def)             Requested size: 404.71353pt x 177.2938pt.
+
+<./images/demotion-1.png, id=46, 1108.14pt x 447.6725pt>
+File: ./images/demotion-1.png Graphic file (type png)
+
+<use ./images/demotion-1.png>
+Package pdftex.def Info: ./images/demotion-1.png used on input line 349.
+(pdftex.def)             Requested size: 404.71353pt x 163.49815pt.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+[9 <./images/demotion-start.png> <./images/demotion-0.png>]
+<./images/demotion-2.png, id=52, 1115.16624pt x 434.62375pt>
+File: ./images/demotion-2.png Graphic file (type png)
+
+<use ./images/demotion-2.png>
+Package pdftex.def Info: ./images/demotion-2.png used on input line 358.
+(pdftex.def)             Requested size: 404.71353pt x 157.7311pt.
+
+<./images/demotion-3.png, id=53, 1116.17pt x 435.6275pt>
+File: ./images/demotion-3.png Graphic file (type png)
+
+<use ./images/demotion-3.png>
+Package pdftex.def Info: ./images/demotion-3.png used on input line 365.
+(pdftex.def)             Requested size: 303.53708pt x 118.46518pt.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+<./images/demotion-4.png, id=54, 601.24625pt x 177.66376pt>
+File: ./images/demotion-4.png Graphic file (type png)
+
+<use ./images/demotion-4.png>
+Package pdftex.def Info: ./images/demotion-4.png used on input line 372.
+(pdftex.def)             Requested size: 303.53708pt x 89.69644pt.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+[10 <./images/demotion-1.png> <./images/demotion-2.png>]
+Overfull \hbox (4.82243pt too wide) in paragraph at lines 382--385
+\OT1/cmr/m/n/10.95 (\OML/cmm/m/it/10.95 i\OT1/cmr/m/n/10.95 )\OMS/cmsy/m/n/10.9
+5 ^^C$ \OT1/cmr/m/n/10.95 DE-FAULT[]BUDGET$\OMS/cmsy/m/n/10.95 ^^T \OML/cmm/m/i
+t/10.95 CPU < \OT1/cmr/m/n/10.95 (\OML/cmm/m/it/10.95 i \OT1/cmr/m/n/10.95 + 1)
+\OMS/cmsy/m/n/10.95 ^^C$\OT1/cmr/m/n/10.95 DEFAULT[]BUDGET in-deed holds with a
+ DE-FAULT[]BUDGET
+ []
+
+[11 <./images/demotion-3.png> <./images/demotion-4.png>]
+<./images/rr-0.png, id=65, 1091.07625pt x 356.33125pt>
+File: ./images/rr-0.png Graphic file (type png)
+ <use ./images/rr-0.png>
+Package pdftex.def Info: ./images/rr-0.png used on input line 410.
+(pdftex.def)             Requested size: 404.71353pt x 132.17215pt.
+
+<./images/rr-1.png, id=66, 1301.86375pt x 467.7475pt>
+File: ./images/rr-1.png Graphic file (type png)
+ <use ./images/rr-1.png>
+Package pdftex.def Info: ./images/rr-1.png used on input line 418.
+(pdftex.def)             Requested size: 404.71353pt x 145.40704pt.
+
+[12 <./images/rr-0.png> <./images/rr-1.png>]
+<./images/prio-runnable.png, id=73, 1256.695pt x 440.64626pt>
+File: ./images/prio-runnable.png Graphic file (type png)
+
+<use ./images/prio-runnable.png>
+Package pdftex.def Info: ./images/prio-runnable.png used on input line 456.
+(pdftex.def)             Requested size: 404.71353pt x 141.90393pt.
+ [13 <./images/prio-runnable.png>]
+<./images/prio-nonrunnable.png, id=78, 1085.05376pt x 797.98125pt>
+File: ./images/prio-nonrunnable.png Graphic file (type png)
+
+<use ./images/prio-nonrunnable.png>
+Package pdftex.def Info: ./images/prio-nonrunnable.png used on input line 465.
+(pdftex.def)             Requested size: 404.71353pt x 297.63496pt.
+ [14 <./images/prio-nonrunnable.png>]
+<./images/promotion.png, id=83, 1617.04124pt x 516.93124pt>
+File: ./images/promotion.png Graphic file (type png)
+
+<use ./images/promotion.png>
+Package pdftex.def Info: ./images/promotion.png used on input line 501.
+(pdftex.def)             Requested size: 505.89pt x 161.72203pt.
+
+Overfull \hbox (15.17746pt too wide) in paragraph at lines 519--523
+[]\OT1/cmr/m/n/10.95 When \OT1/cmtt/m/n/10.95 test \OT1/cmr/m/n/10.95 wakes af-
+ter 2 sec-onds, \OT1/cmtt/m/n/10.95 invalid[]priorityset() \OT1/cmr/m/n/10.95 w
+ill then call \OT1/cmtt/m/n/10.95 priorityset(PID, PRIORITY)
+ []
+
+<./images/invalid-priority.png, id=84, 1122.1925pt x 411.5375pt>
+File: ./images/invalid-priority.png Graphic file (type png)
+
+<use ./images/invalid-priority.png>
+Package pdftex.def Info: ./images/invalid-priority.png used on input line 529.
+(pdftex.def)             Requested size: 404.71353pt x 148.41713pt.
+ [15 <./images/promotion.png>]
+Overfull \hbox (29.83443pt too wide) in paragraph at lines 542--545
+[]\OT1/cmr/m/n/10.95 We will then in-voke \OT1/cmtt/m/n/10.95 test & \OT1/cmr/m
+/n/10.95 to re-gain shell con-trol, where \OT1/cmtt/m/n/10.95 test \OT1/cmr/m/n
+/10.95 will ex-e-cute the func-tion \OT1/cmtt/m/n/10.95 prioritypromotion()
+ []
+
+<./images/max-1.png, id=89, 1629.08624pt x 284.06125pt>
+File: ./images/max-1.png Graphic file (type png)
+
+<use ./images/max-1.png>
+Package pdftex.def Info: ./images/max-1.png used on input line 548.
+(pdftex.def)             Requested size: 505.89pt x 88.20976pt.
+
+<./images/max-3.png, id=90, 1627.07875pt x 584.1825pt>
+File: ./images/max-3.png Graphic file (type png)
+
+<use ./images/max-3.png>
+Package pdftex.def Info: ./images/max-3.png used on input line 556.
+(pdftex.def)             Requested size: 455.2979pt x 163.46301pt.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+[16 <./images/invalid-priority.png> <./images/max-1.png>]
+<./images/max-7a.png, id=96, 1760.5775pt x 1069.9975pt>
+File: ./images/max-7a.png Graphic file (type png)
+
+<use ./images/max-7a.png>
+Package pdftex.def Info: ./images/max-7a.png used on input line 564.
+(pdftex.def)             Requested size: 404.71353pt x 245.96362pt.
+ <./images/max-7b.png, id=97, 1636.1125pt x 634.37pt>
+File: ./images/max-7b.png Graphic file (type png)
+
+<use ./images/max-7b.png>
+Package pdftex.def Info: ./images/max-7b.png used on input line 571.
+(pdftex.def)             Requested size: 404.71353pt x 156.91751pt.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+[17 <./images/max-3.png> <./images/max-7a.png>] [18 <./images/max-7b.png>]
+(./keene_project4.aux)
+
+LaTeX Warning: There were multiply-defined labels.
+
+ ) 
+Here is how much of TeX's memory you used:
+ 3205 strings out of 493014
+ 44175 string characters out of 6133351
+ 116848 words of memory out of 5000000
+ 6674 multiletter control sequences out of 15000+600000
+ 11866 words of font info for 45 fonts, out of 8000000 for 9000
+ 1141 hyphenation exceptions out of 8191
+ 38i,11n,43p,809b,334s stack positions out of 5000i,500n,10000p,200000b,80000s
+</usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb
+></usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb>
+</usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb><
+/usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></u
+sr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr
+/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/l
+ocal/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/loc
+al/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/local/
+texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/t
+exlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/tex
+live/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/local/texl
+ive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb>
+Output written on keene_project4.pdf (19 pages, 790134 bytes).
+PDF statistics:
+ 147 PDF objects out of 1000 (max. 8388607)
+ 81 compressed objects within 1 object stream
+ 0 named destinations out of 1000 (max. 500000)
+ 81 words of extra memory for PDF output out of 10000 (max. 10000000)
+
