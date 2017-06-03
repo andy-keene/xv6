@@ -262,6 +262,15 @@ create(char *path, short type, short major, short minor)
   ip->major = major;
   ip->minor = minor;
   ip->nlink = 1;
+  #ifdef CS333_P5
+  //Must set permissions for all new file/dir creations
+  //at runtime. Currently set uid/gid to the calling proc,
+  //which is the proc creating the file. 
+  //Per convo w/ Enis, the uid/gid could be set as DEAFULT_s
+  ip->uid = proc->uid;
+  ip->gid = proc->gid;
+  ip->mode.asInt = DEFAULT_MODE;
+  #endif
   iupdate(ip);
 
   if(type == T_DIR){  // Create . and .. entries.
@@ -440,3 +449,106 @@ sys_pipe(void)
   fd[1] = fd1;
   return 0;
 }
+
+#ifdef CS333_P5
+//P5 system calls - belong in sys_file.c due to their nature
+
+int
+sys_chmod(void)
+{
+  int mode;
+  char *path;
+  struct inode *ip;
+
+  //retrieve args from stack
+  if(argptr(0, (void*)&path, sizeof(*path)) < 0 ||
+     argint(1, &mode) < 0)
+    return -1;
+
+  //validate mode is in correct octal range
+  if(mode < 0 || mode > 01777)
+    return -1;
+
+  //get inode reference to file, and update mode transactionally
+  begin_op();
+  if((ip = namei(path)) == 0){
+    end_op();
+    return -1;  //failed to find file
+  }
+  //sync with disk if nec. + update mode
+  ilock(ip);
+  ip->mode.asInt = mode;
+  iupdate(ip);
+  iunlock(ip);
+  end_op();
+
+  return 0;
+}
+
+int
+sys_chown(void)
+{
+  int uid;
+  char *path;
+  struct inode *ip;
+
+  //retrieve args from stack
+  if(argptr(0, (void*)&path, sizeof(*path)) < 0 ||
+     argint(1, &uid) < 0)
+    return -1;
+
+  //same validation as setuid(), since no
+  //process can have a uid < 0 or > 32767
+  if(uid < 0 || uid > 32767)
+    return -1;  //out of bounds
+
+  //get inode reference to file, and update uid transactionally
+  begin_op();
+  if((ip = namei(path)) == 0){
+    end_op();
+    return -1;  //failed to find file
+  }
+  //sync with disk if nec. + update inodes uid
+  ilock(ip);
+  ip->uid = uid;
+  iupdate(ip);
+  iunlock(ip);
+  end_op();
+
+  return 0;
+}
+
+int
+sys_chgrp(void)
+{
+  int gid;
+  char *path;
+  struct inode *ip;
+
+  //retrieve args from stack
+  if(argptr(0, (void*)&path, sizeof(*path)) < 0 ||
+     argint(1, &gid) < 0)
+    return -1;
+
+  //same validation as setgid(), since no
+  //process can have a gid < 0 or > 32767
+  if(gid < 0 || gid > 32767)
+    return -1;  //out of bounds
+
+  //get inode reference to file, and update gid transactionally
+  begin_op();
+  if((ip = namei(path)) == 0){
+    end_op();
+    return -1;  //failed to find file
+  }
+  //sync with disk if nec. + update inodes gid
+  ilock(ip);
+  ip->gid = gid;
+  iupdate(ip);
+  iunlock(ip);
+  end_op();
+
+  return 0;
+}
+
+#endif

@@ -99,33 +99,98 @@ extern int sys_wait(void);
 extern int sys_write(void);
 extern int sys_uptime(void);
 extern int sys_halt(void);
+extern int sys_date(void);
+extern int sys_getuid(void);
+extern int sys_getgid(void);
+extern int sys_getppid(void);
+extern int sys_setuid(void);
+extern int sys_setgid(void);
+extern int sys_getprocs(void);
+extern int sys_setpriority(void);
+#ifdef CS333_P5
+extern int sys_chmod(void);
+extern int sys_chown(void);
+extern int sys_chgrp(void);
+#endif
 
 static int (*syscalls[])(void) = {
-[SYS_fork]    sys_fork,
-[SYS_exit]    sys_exit,
-[SYS_wait]    sys_wait,
-[SYS_pipe]    sys_pipe,
-[SYS_read]    sys_read,
-[SYS_kill]    sys_kill,
-[SYS_exec]    sys_exec,
-[SYS_fstat]   sys_fstat,
-[SYS_chdir]   sys_chdir,
-[SYS_dup]     sys_dup,
-[SYS_getpid]  sys_getpid,
-[SYS_sbrk]    sys_sbrk,
-[SYS_sleep]   sys_sleep,
-[SYS_uptime]  sys_uptime,
-[SYS_open]    sys_open,
-[SYS_write]   sys_write,
-[SYS_mknod]   sys_mknod,
-[SYS_unlink]  sys_unlink,
-[SYS_link]    sys_link,
-[SYS_mkdir]   sys_mkdir,
-[SYS_close]   sys_close,
-[SYS_halt]    sys_halt,
+[SYS_fork]         sys_fork,
+[SYS_exit]         sys_exit,
+[SYS_wait]         sys_wait,
+[SYS_pipe]         sys_pipe,
+[SYS_read]         sys_read,
+[SYS_kill]         sys_kill,
+[SYS_exec]         sys_exec,
+[SYS_fstat]        sys_fstat,
+[SYS_chdir]        sys_chdir,
+[SYS_dup]          sys_dup,
+[SYS_getpid]       sys_getpid,
+[SYS_sbrk]         sys_sbrk,
+[SYS_sleep]        sys_sleep,
+[SYS_uptime]       sys_uptime,
+[SYS_open]         sys_open,
+[SYS_write]        sys_write,
+[SYS_mknod]        sys_mknod,
+[SYS_unlink]       sys_unlink,
+[SYS_link]         sys_link,
+[SYS_mkdir]        sys_mkdir,
+[SYS_close]        sys_close,
+[SYS_halt]         sys_halt,
+[SYS_date]         sys_date,
+[SYS_getuid]       sys_getuid,
+[SYS_getgid]       sys_getgid,
+[SYS_getppid]      sys_getppid,
+[SYS_setuid]       sys_setuid,
+[SYS_setgid]       sys_setgid,
+[SYS_getprocs]     sys_getprocs,
+[SYS_setpriority]  sys_setpriority,
+#ifdef CS333_P5
+[SYS_chmod]        sys_chmod,
+[SYS_chown]        sys_chown,
+[SYS_chgrp]        sys_chgrp,
+#endif
 };
 
 // put data structure for printing out system call invocation information here
+#ifdef PRINT_SYSCALLS
+const char * syscallnames[] = {
+ [SYS_fork]         "fork",
+ [SYS_exit]         "exit",
+ [SYS_wait]         "wait",
+ [SYS_pipe]         "pipe",
+ [SYS_read]         "read",
+ [SYS_kill]         "kill",
+ [SYS_exec]         "exec",
+ [SYS_fstat]        "fstat",
+ [SYS_chdir]        "chdir",
+ [SYS_dup]          "dup",
+ [SYS_getpid]       "getpid",
+ [SYS_sbrk]         "sbrk",
+ [SYS_sleep]        "sleep",
+ [SYS_uptime]       "uptime",
+ [SYS_open]         "open",
+ [SYS_write]        "write",
+ [SYS_mknod]        "mknod",
+ [SYS_unlink]       "unlink",
+ [SYS_link]         "link",
+ [SYS_mkdir]        "mkdir",
+ [SYS_close]        "close",
+ [SYS_halt]         "halt",
+ [SYS_date]         "date",
+ [SYS_getuid]       "getuid",
+ [SYS_getgid]       "getgid",
+ [SYS_getppid]      "getppid",
+ [SYS_setuid]       "setuid",
+ [SYS_setgid]       "getgid",
+ [SYS_getprocs]     "getprocs",
+ [SYS_setpriority]  "setpriority",
+#ifdef CS333_P5
+ [SYS_chmod]        "chmod",
+ [SYS_chown]        "chown",
+ [SYS_chgrp]        "chgrp",
+#endif
+};
+#endif //ed PRINT_SYSCALLS
 
 void
 syscall(void)
@@ -135,7 +200,10 @@ syscall(void)
   num = proc->tf->eax;
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
     proc->tf->eax = syscalls[num]();
-// some code goes here
+    // some code goes here
+    #ifdef PRINT_SYSCALLS
+    cprintf("%s -> %d\n", syscallnames[num], proc->tf->eax);
+    #endif
   } else {
     cprintf("%d %s: unknown sys call %d\n",
             proc->pid, proc->name, num);

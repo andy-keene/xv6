@@ -8,6 +8,7 @@ struct rtcdate;
 struct spinlock;
 struct stat;
 struct superblock;
+struct uproc;
 
 // bio.c
 void            binit(void);
@@ -118,6 +119,12 @@ void            userinit(void);
 int             wait(void);
 void            wakeup(void*);
 void            yield(void);
+int             getprocs(uint, struct uproc *);
+void            freelistinfo(void);
+void            readylistinfo(void);
+void            sleepinglistinfo(void);
+void            zombielistinfo(void);
+int             setpriority(int, int);
 
 // swtch.S
 void            swtch(struct context**, struct context*);

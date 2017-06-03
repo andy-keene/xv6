@@ -6,6 +6,7 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "proc.h"
+#include "uproc.h"
 
 int
 sys_fork(void)
@@ -91,5 +92,95 @@ int sys_halt(void){
 // outw (0xB004, 0x0 | 0x2000);  // changed in newest version of QEMU
   outw( 0x604, 0x0 | 0x2000);
   return 0;
+}
+
+//return date
+int
+sys_date(void)
+{
+  struct rtcdate *d;
+  //see argptr def in syscall.c for reminder
+  if(argptr(0, (void*)&d, sizeof(*d)) < 0)
+    return -1;
+  //pass struct ptr to cmosttime
+  cmostime(d);
+  return 0; 
+}
+
+int
+sys_getuid(void)
+{
+  return proc->uid;
+}
+
+int
+sys_getgid(void)
+{
+  return proc->gid;
+}
+
+int
+sys_getppid(void)
+{
+  //init proc has no parent
+  return proc->parent ? proc->parent->pid : proc->pid;
+}
+
+int
+sys_setuid(void)
+{
+  int stack_arg;
+  uint uid;
+
+  if(argint(0, &stack_arg) < 0)
+    return -1;
+  uid = (uint)stack_arg;
+  if(uid < 0 || uid > 32767)
+    return -1;  //out of bounds
+  proc->uid = uid;
+  return 0;
+}
+
+int
+sys_setgid(void)
+{
+  int stack_arg;
+  uint gid;
+
+  if(argint(0, &stack_arg) < 0)
+    return -1;
+  gid = (uint)stack_arg;
+  if(gid < 0 || gid > 32767)
+    return -1;
+  proc->gid = gid; 
+  return 0;
+}
+
+int
+sys_getprocs(void)
+{
+  int stack_arg;
+  struct uproc *table;
+ 
+  //return failure to retrieve arguments
+  if(argint(0, &stack_arg) < 0)
+    return -1; 
+  if(argptr(1, (void*)&table, sizeof(*table)) < 0)
+    return -1;
+  //we're just a wrapper for getprocs() in proc.c
+  return getprocs((uint)stack_arg, table);
+}
+
+// sets the priority of the calling process
+// no list transitions since proc must be in RUNNING
+int
+sys_setpriority(void)
+{ 
+  int pid, priority;
+  if(argint(0, &pid) < 0 || argint(1, &priority) < 0)
+    return -1;
+
+  //access to lists are needed, so call into proc.c 
+  return setpriority(pid, priority);
 }
 

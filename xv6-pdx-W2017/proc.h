@@ -1,5 +1,14 @@
 // Segments in proc->gdt.
 #define NSEGS     7
+//#define DEBUG                      // turns on checkProcs to prove list invariant
+#define NULL 0                     // only used in #DEBUG
+//#define TPS 100
+//#define MAX 5
+#define TICKS_TO_PROMOTE 11*TPS    // ticks between prio resets
+#define DEFAULT_BUDGET 3*TPS       // defines alloted CPU time before demotion
+
+// MAX,TPS is defined in param.h for user-kernel visibility
+
 
 // Per-CPU state
 struct cpu {
@@ -58,6 +67,8 @@ struct proc {
   char *kstack;                // Bottom of kernel stack for this process
   enum procstate state;        // Process state
   uint pid;                    // Process ID
+  uint uid;                    // Process user ID (UID)
+  uint gid;                    // Process group ID (GID)
   struct proc *parent;         // Parent process
   struct trapframe *tf;        // Trap frame for current syscall
   struct context *context;     // swtch() here to run process
@@ -66,6 +77,12 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
+  uint start_ticks;            // Time of creation
+  uint cpu_ticks_total;        // Total running time of proc in ticks
+  uint cpu_ticks_in;           // Tick count when last scheduled
+  uint priority;               // Current priority level in MLFQ
+  int budget;                  // Budget to track CPU time in MLFQ
+  struct proc *next;           // Next processes for P3 state lists
 };
 
 // Process memory is laid out contiguously, low addresses first:

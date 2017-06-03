@@ -2,6 +2,9 @@
 #include "stat.h"
 #include "user.h"
 #include "fs.h"
+#ifdef CS333_P5
+#include "print_mode.c"
+#endif
 
 char*
 fmtname(char *path)
@@ -40,10 +43,20 @@ ls(char *path)
     close(fd);
     return;
   }
-  
+
+#ifdef CS333_P5
+  //print header for P5 permissions modifications
+  printf(1, "mode\t\tname\t\t\tuid\tgid\tinode\tsize\n");
+#endif
   switch(st.type){
   case T_FILE:
+#ifdef CS333_P5
+    //extra buffer for long file names
+    print_mode(&st); 
+    printf(1, "\t%s\t\t%d\t%d\t%d\t%d\n", fmtname(path), st.uid, st.gid, st.ino, st.size);
+#else
     printf(1, "%s %d %d %d\n", fmtname(path), st.type, st.ino, st.size);
+#endif
     break;
   
   case T_DIR:
@@ -63,7 +76,12 @@ ls(char *path)
         printf(1, "ls: cannot stat %s\n", buf);
         continue;
       }
+#ifdef CS333_P5
+      print_mode(&st); 
+      printf(1, "\t%s\t\t%d\t%d\t%d\t%d\n", fmtname(buf), st.uid, st.gid, st.ino, st.size);
+#else
       printf(1, "%s %d %d %d\n", fmtname(buf), st.type, st.ino, st.size);
+#endif
     }
     break;
   }

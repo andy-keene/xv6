@@ -1,5 +1,6 @@
 struct stat;
 struct rtcdate;
+struct uproc;
 
 // system calls
 int fork(void);
@@ -24,6 +25,24 @@ char* sbrk(int);
 int sleep(int);
 int uptime(void);
 int halt(void);
+// Added system calls
+//Project 1
+int date(struct rtcdate*);
+//Project 2
+uint getuid(void);
+uint getgid(void);
+uint getppid(void);
+int setuid(uint);
+int setgid(uint);
+int getprocs(uint, struct uproc *);
+//Project 4
+int setpriority(int, int);
+//Project 5
+#ifdef CS333_P5
+int chmod(char*, int);
+int chown(char*, int);
+int chgrp(char*, int);
+#endif
 
 // ulib.c
 int stat(char*, struct stat*);
@@ -38,3 +57,4 @@ void* memset(void*, int, uint);
 void* malloc(uint);
 void free(void*);
 int atoi(const char*);
+int atoo(const char*);
