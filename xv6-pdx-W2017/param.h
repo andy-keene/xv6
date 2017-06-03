@@ -11,6 +11,10 @@
 #define LOGSIZE      (MAXOPBLOCKS*3)  // max data blocks in on-disk log
 #define NBUF         (MAXOPBLOCKS*3)  // size of disk block cache
 // #define FSSIZE       1000  // size of file system in blocks
-#define FSSIZE       2000  // size of file system in blocks  // CS333 requires a larger FS.
-#define INITUID      0   // UID of 1st process 
-#define INITGID      0   // GID of 1st process
+#define FSSIZE     2000  // size of file system in blocks  // CS333 requires a larger FS.
+
+#define DEFAULT_UID       0   // UID of 1st process and files created by mkfs on fs creation
+#define DEFAULT_GID       0   // GID of 1st process and files created by mkfs on fs creation
+#define DEFAULT_MODE  00755   // Default mode of files created by mkfs on fs creation
+                              // corresponds to mode = 0755, Setuid=1, User=7, Group=5, Owner=5 
+                              // the leading zero implies octal interpretation

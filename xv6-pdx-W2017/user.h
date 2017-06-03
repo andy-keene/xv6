@@ -37,6 +37,12 @@ int setgid(uint);
 int getprocs(uint, struct uproc *);
 //Project 4
 int setpriority(int, int);
+//Project 5
+#ifdef CS333_P5
+int chmod(char*, int);
+int chown(char*, int);
+int chgrp(char*, int);
+#endif
 
 // ulib.c
 int stat(char*, struct stat*);
@@ -51,3 +57,4 @@ void* memset(void*, int, uint);
 void* malloc(uint);
 void free(void*);
 int atoi(const char*);
+int atoo(const char*);

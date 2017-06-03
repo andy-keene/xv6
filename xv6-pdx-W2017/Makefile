@@ -73,6 +73,7 @@ CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 &
 #CFLAGS += -DPRINT_SYSCALLS     # CS333 to print syscall traces
 #CFLAGS += -DUSE_BUILTINS       # CS333 to turn on shell built-ins
 CFLAGS += -DCS333_P3P4          # CS333 to use proc lists instead of table (project 3 and 4)
+CFLAGS += -DCS333_P5            # CS333 to use file system modifications and protections in P5
 ASFLAGS = -m32 -gdwarf-2 -Wa,-divide
 # FreeBSD ld wants ``elf_i386_fbsd''
 LDFLAGS += -m $(shell $(LD) -V | grep elf_i386 2>/dev/null)
@@ -127,8 +128,10 @@ _forktest: forktest.o $(ULIB)
 	$(LD) $(LDFLAGS) -N -e main -Ttext 0 -o _forktest forktest.o ulib.o usys.o
 	$(OBJDUMP) -S _forktest > forktest.asm
 
+#define CS333_P5 flag
 mkfs: mkfs.c fs.h
-	gcc -Werror -Wall -o mkfs mkfs.c
+	gcc -Werror -Wall -DCS333_P5 -o mkfs mkfs.c #P5 version
+#	gcc -Werror -Wall -o mkfs mkfs.c
 
 # Prevent deletion of intermediate files, e.g. cat.o, after first build, so
 # that disk image changes after first build are persistent until clean.  More
@@ -157,6 +160,11 @@ UPROGS=\
         _test\
         _ps\
         _time\
+        _chmod\
+        _chown\
+        _chgrp\
+        _p5-test\
+        _testsetuid\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)

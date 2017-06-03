@@ -183,3 +183,4 @@ sys_setpriority(void)
   //access to lists are needed, so call into proc.c 
   return setpriority(pid, priority);
 }
+

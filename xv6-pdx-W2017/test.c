@@ -336,11 +336,20 @@ void p3tests(void)
 //   free_zombie_tests();
 
 }
+void sys_calls(void)
+{
+}
 
+void p5tests(void)
+{
+  sys_calls();
+
+}
 int
 main(int argc, char*argv[])
 {
-  p4tests();
+  p5tests();
+//  p4tests();
 //  p3tests();
 //  p2tests();
 
