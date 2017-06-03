@@ -16,3 +16,5 @@ Each branch corresponds to the following project description:
 
 
 The report for project `x` may be found under `Reports/Project x/keene_projectx.pdf`. Note that [QEUMU](http://www.qemu.org) is required to run xv6 and that certain features or projects may depend on conditional compilation flags which require edits to the Makefile to enable. 
+
+*\*To see the xv6 kernel modifications required by CS 333 during Spring 2017, please see the open PR between `project5` and `original`.*
